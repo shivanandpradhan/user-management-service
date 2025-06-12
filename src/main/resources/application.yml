@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: user-management-service
+  main:
+    allow-bean-definition-overriding: true
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/userdb
+      auto-index-creation: true
+      custom-converters: false
+
+#    redis:
+#      repositories:
+#        enabled: false
+#
+#  autoconfigure:
+#    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+#  redis:
+#    host: localhost
+#    port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: user-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  mail:
+    host: smtp.example.com
+    port: 587
+    username: admin@example.com
+    password: password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        transport:
+          protocol: smtp
+          timeout: 5000
+          write-timeout: 5000
+          connection-timeout: 5000
+  thymeleaf:
+    check-template-location: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+    health:
+        show-details: always
+
+
+jwt:
+  secret: "N5hDo6X+wbM/U5wfDdq68oLUUHyTHA/A7pCpIMJWtT1ObBd4IYRI+CxrgEGnsreNghenpMmeUHUcPm4SoRO5sw=="
+  expiration: 86400000 # 24 hours
+  issuer: user-management-service
+
+app:
+  otp:
+    expiry-minutes: 5
+  mfa:
+    issuer: UserManagement
+  rate-limit:
+    signup: 3
+    window: 1h
+  super-admin:
+    initial-email: superadmin@example.com
+    initial-password: ChangeMe123!
+
+logging:
+  level:
+    root: INFO
+    org.springframework: INFO
+#    org.springframework: DEBUG
+    com.snp.dev.user-management-service: DEBUG
+
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        web: DEBUG
+
+server:
+  port: 8080
