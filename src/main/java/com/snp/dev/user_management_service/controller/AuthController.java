@@ -70,7 +70,7 @@ public class AuthController {
     }
 
     @PostMapping("/mfa/verify")
-    public Mono<ResponseEntity<ApiResponse<Void>>> verifyMfa(
+    public Mono<ResponseEntity<ApiResponse<AuthResponse>>> verifyMfa(
             @RequestBody MfaVerifyRequest mfaVerifyRequest,
             @RequestHeader("X-User-Id") String userId) {
         return authService.verifyMfa(mfaVerifyRequest, userId)

@@ -391,7 +391,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Mono<ApiResponse<Void>> verifyMfa(MfaVerifyRequest mfaVerifyRequest, String userId) {
+    public Mono<ApiResponse<AuthResponse>> verifyMfa(MfaVerifyRequest mfaVerifyRequest, String userId) {
         return userRepository.findById(userId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found")))
                 .flatMap(user -> userSecurityRepository.findByUserId(user.getId())
@@ -410,7 +410,16 @@ public class AuthServiceImpl implements AuthService {
                                                 user.getId(),
                                                 "MFA_VERIFIED",
                                                 "User verified MFA setup"
-                                        ).thenReturn(ApiResponse.<Void>success(null));
+                                        ).then(tokenProvider.createToken(user.getUsername(), user.getRoles())
+                                                .map(accessToken -> ApiResponse.success(
+                                                        AuthResponse.builder()
+                                                                .accessToken(accessToken)
+                                                                .refreshToken(UUID.randomUUID().toString())
+                                                                .userId(user.getId())
+                                                                .username(user.getUsername())
+                                                                .email(user.getEmail())
+                                                                .build()
+                                                )));
                                     });
                         }))
                 .onErrorResume(e -> {
