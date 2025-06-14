@@ -23,7 +23,7 @@ public class InMemoryOtpServiceImpl implements OtpService {
         // Generate OTP
         String otp = generateOtpCode();
         otpStore.put(key, otp);
-        log.info("Generated OTP for key '{}'. OTP is stored in-memory.", key);
+        log.info("Generated OTP :- key - value :-'{}  {}'. OTP is stored in-memory.", key, otp);
 
         // Schedule OTP expiration
         executor.schedule(() -> {

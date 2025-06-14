@@ -14,6 +14,6 @@ public interface AuthService {
     Mono<ApiResponse<Void>> changePassword(ChangePasswordRequest changePasswordRequest, String userId);
     Mono<ApiResponse<TokenRefreshResponse>> refreshToken(TokenRefreshRequest tokenRefreshRequest);
     Mono<ApiResponse<MfaSetupResponse>> setupMfa(MfaSetupRequest mfaSetupRequest, String userId);
-    Mono<ApiResponse<Void>> verifyMfa(MfaVerifyRequest mfaVerifyRequest, String userId);
+    Mono<ApiResponse<AuthResponse>> verifyMfa(MfaVerifyRequest mfaVerifyRequest, String userId);
     Mono<ApiResponse<Void>> disableMfa(String userId);
 }
