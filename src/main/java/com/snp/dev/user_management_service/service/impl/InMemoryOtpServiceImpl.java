@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@Service
+//@Service
 @Slf4j
 public class InMemoryOtpServiceImpl implements OtpService {
 

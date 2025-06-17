@@ -29,7 +29,7 @@ public class JwtAuthenticationConverter implements ServerAuthenticationConverter
                         .map(claims -> {
                             String username = claims.getSubject();
                             List<SimpleGrantedAuthority> grantedAuthorities = getAuthorities(claims);
-                            return new UsernamePasswordAuthenticationToken(username, null, grantedAuthorities);
+                            return new UsernamePasswordAuthenticationToken(username, token, grantedAuthorities);
                         }));
     }
 

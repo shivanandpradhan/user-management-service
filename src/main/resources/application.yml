@@ -9,6 +9,13 @@ spring:
       auto-index-creation: true
       custom-converters: false
 
+  redis:
+    host: localhost
+    port: 6379
+
+otp:
+  length: 6
+  expiry-minutes: 5
 #    redis:
 #      repositories:
 #        enabled: false
