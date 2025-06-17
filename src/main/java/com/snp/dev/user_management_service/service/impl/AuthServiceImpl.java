@@ -130,6 +130,7 @@ public class AuthServiceImpl implements AuthService {
                                                 .userId(savedUser.getId())
                                                 .username(savedUser.getUsername())
                                                 .email(savedUser.getEmail())
+                                                .roles(savedUser.getRoles())
                                                 .build()
                                 ));
                             });
@@ -196,6 +197,7 @@ public class AuthServiceImpl implements AuthService {
                             .userId(user.getId())
                             .username(user.getUsername())
                             .email(user.getEmail())
+                            .roles(user.getRoles())
                             .build()
             ));
         } else {
@@ -209,6 +211,7 @@ public class AuthServiceImpl implements AuthService {
                                     .userId(user.getId())
                                     .username(user.getUsername())
                                     .email(user.getEmail())
+                                    .roles(user.getRoles())
                                     .build()
                     ));
         }
@@ -258,8 +261,20 @@ public class AuthServiceImpl implements AuthService {
                                         if (userSecurity.isMfaEnabled()) {
                                             return Mono.error(new BadRequestException("MFA is already enabled"));
                                         }
-                                        return otpService.clearOtp(user.getEmail())
-                                                .then(tokenProvider.createToken(user.getUsername(), user.getRoles())
+                                        // using inmemory otp service.
+//                                        return otpService.clearOtp(user.getEmail())
+//                                                .then(tokenProvider.createToken(user.getUsername(), user.getRoles())
+//                                                        .map(accessToken -> ApiResponse.success(
+//                                                                AuthResponse.builder()
+//                                                                        .accessToken(accessToken)
+//                                                                        .refreshToken(UUID.randomUUID().toString()) // In real app, generate proper refresh token
+//                                                                        .mfaEnabled(false)
+//                                                                        .userId(user.getId())
+//                                                                        .username(user.getUsername())
+//                                                                        .email(user.getEmail())
+//                                                                        .build()
+//                                                        )));
+                                        return tokenProvider.createToken(user.getUsername(), user.getRoles())
                                                         .map(accessToken -> ApiResponse.success(
                                                                 AuthResponse.builder()
                                                                         .accessToken(accessToken)
@@ -269,11 +284,9 @@ public class AuthServiceImpl implements AuthService {
                                                                         .username(user.getUsername())
                                                                         .email(user.getEmail())
                                                                         .build()
-                                                        )));
+                                                        ));
                                     });
                         })
-
-//                        .then(otpService.clearOtp(verifyOtpRequest.getUsernameOrEmail())))
                 .onErrorResume(e -> {
                     log.error("OTP verification error: {}", e.getMessage());
                     return Mono.just(ApiResponse.error(Collections.singletonList(
@@ -418,6 +431,7 @@ public class AuthServiceImpl implements AuthService {
                                                                 .userId(user.getId())
                                                                 .username(user.getUsername())
                                                                 .email(user.getEmail())
+                                                                .roles(user.getRoles())
                                                                 .build()
                                                 )));
                                     });

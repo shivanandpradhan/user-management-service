@@ -1,21 +1,19 @@
 package com.snp.dev.user_management_service.security;
 
-import com.snp.dev.user_management_service.model.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -24,14 +22,16 @@ public class JwtTokenProvider {
     private final Key key;
     private final long validityInMilliseconds;
     private final String issuer;
+    private final ReactiveUserDetailsService userDetailsService;
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration}") long validityInMilliseconds,
-            @Value("${jwt.issuer}") String issuer) {
+            @Value("${jwt.issuer}") String issuer, ReactiveUserDetailsService userDetailsService) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.validityInMilliseconds = validityInMilliseconds;
         this.issuer = issuer;
+        this.userDetailsService = userDetailsService;
     }
 
     public Mono<String> createToken(Authentication authentication) {
@@ -86,6 +86,38 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody());
+    }
+
+    public Mono<String> getUsernameFromToken(String token) {
+        return Mono.fromCallable(() ->
+                Jwts.parserBuilder()
+                        .setSigningKey(key)
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .getSubject()
+        ).onErrorResume(e -> Mono.empty());
+    }
+
+    public Mono<Authentication> getAuthentication(String token) {
+        return Mono.fromCallable(() -> {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(key)
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return new UsernamePasswordAuthenticationToken(
+                    claims.getSubject(),
+                    null,
+                    Collections.emptyList());
+        }).flatMap(auth ->
+                userDetailsService.findByUsername(auth.getName())
+                        .map(userDetails -> new UsernamePasswordAuthenticationToken(
+                                userDetails.getUsername(),
+                                null,
+                                userDetails.getAuthorities()
+                        ))
+        );
     }
 }
 
