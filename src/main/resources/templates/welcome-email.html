@@ -15,8 +15,7 @@
 
 <div class="footer">
     <p>Need help? Contact <span th:text="${supportEmail}">support</span></p>
-<!--    <p th:text="'© ' + #temporals.format(#temporals.createNow(), 'yyyy') + ' Your Company'"></p>-->
-    <p th:text="${'© ' + #temporals.format(#temporals.createNow(), 'yyyy') + ' Your Company'}"></p>
+    <p>© <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy')}"></span> Let's Code With SNP</p>
 </div>
 </body>
 </html>

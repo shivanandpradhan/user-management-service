@@ -1,14 +1,20 @@
 package com.snp.dev.user_management_service.service.impl;
 
+import com.snp.dev.user_management_service.dto.*;
 import com.snp.dev.user_management_service.exception.AccountDisabledException;
 import com.snp.dev.user_management_service.exception.AccountLockedException;
 import com.snp.dev.user_management_service.exception.BadRequestException;
 import com.snp.dev.user_management_service.exception.ResourceNotFoundException;
-import com.snp.dev.user_management_service.security.JwtTokenProvider;
-import com.snp.dev.user_management_service.dto.*;
-import com.snp.dev.user_management_service.model.*;
+import com.snp.dev.user_management_service.model.User;
+import com.snp.dev.user_management_service.model.UserMetadata;
+import com.snp.dev.user_management_service.model.UserProfile;
+import com.snp.dev.user_management_service.model.UserSecurity;
 import com.snp.dev.user_management_service.repository.*;
-import com.snp.dev.user_management_service.service.*;
+import com.snp.dev.user_management_service.security.JwtTokenProvider;
+import com.snp.dev.user_management_service.service.AuditService;
+import com.snp.dev.user_management_service.service.AuthService;
+import com.snp.dev.user_management_service.service.MfaService;
+import com.snp.dev.user_management_service.service.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

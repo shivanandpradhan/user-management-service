@@ -2,7 +2,6 @@ package com.snp.dev.user_management_service.service.impl;
 
 import com.snp.dev.user_management_service.service.OtpService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;

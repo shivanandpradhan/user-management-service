@@ -11,9 +11,7 @@ import com.snp.dev.user_management_service.repository.CustomUserRepository;
 import com.snp.dev.user_management_service.repository.UserProfileRepository;
 import com.snp.dev.user_management_service.repository.UserRepository;
 import com.snp.dev.user_management_service.repository.UserSecurityRepository;
-import com.snp.dev.user_management_service.security.CustomUserDetailsService;
 import com.snp.dev.user_management_service.service.AuditService;
-//import com.snp.dev.user_management_service.service.KafkaProducerService;
 import com.snp.dev.user_management_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +22,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor

@@ -21,10 +21,10 @@ public class OtpServiceImpl implements OtpService {
     private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final Scheduler scheduler = Schedulers.boundedElastic();
 
-    @Value("${otp.length}")
+    @Value("${app.otp.length}")
     private int otpLength;
 
-    @Value("${otp.expiry-minutes}")
+    @Value("${app.otp.expiry-minutes}")
     private long expiryMinutes;
 
     @Override
