@@ -1,3 +1,7 @@
+
+server:
+  port: 8080
+
 spring:
   application:
     name: user-management-service
@@ -41,6 +45,7 @@ spring:
         acks: all
         delivery.timeout.ms: 30000
         request.timeout.ms: 15000
+
   redis:
     host: localhost
     port: 6379
@@ -66,11 +71,6 @@ spring:
 #      key-serializer: org.apache.kafka.common.serialization.StringSerializer
 #      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
-
-otp:
-  length: 6
-  expiry-minutes: 5
-
 #  spring.mail.host=smtp.example.com
 #  spring.mail.port=587
 #  spring.mail.username=your_email@example.com
@@ -79,8 +79,8 @@ otp:
 #  spring.mail.properties.mail.smtp.starttls.enable=true
 #  spring.mail.default-encoding=UTF-8
 
-  thymeleaf:
-    check-template-location: false
+#  thymeleaf:
+#    check-template-location: false
 management:
   endpoints:
     web:
@@ -98,6 +98,7 @@ jwt:
 
 app:
   otp:
+    length: 6
     expiry-minutes: 5
   mfa:
     issuer: UserManagement
@@ -123,6 +124,3 @@ logging:
 #    org:
 #      springframework:
 #        web: DEBUG
-
-server:
-  port: 8080
