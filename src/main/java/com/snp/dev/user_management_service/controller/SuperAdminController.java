@@ -1,8 +1,8 @@
 package com.snp.dev.user_management_service.controller;
 
 import com.snp.dev.user_management_service.dto.ApiResponse;
-import com.snp.dev.user_management_service.dto.PageResponse;
-import com.snp.dev.user_management_service.dto.UserResponse;
+import com.snp.dev.user_management_service.dto.response.PageResponse;
+import com.snp.dev.user_management_service.dto.response.UserResponse;
 import com.snp.dev.user_management_service.repository.RoleRepository;
 import com.snp.dev.user_management_service.service.AuditService;
 import com.snp.dev.user_management_service.service.UserService;

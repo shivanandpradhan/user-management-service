@@ -1,22 +1,21 @@
 package com.snp.dev.user_management_service.service.impl;
 
-import com.snp.dev.user_management_service.dto.*;
+import com.snp.dev.user_management_service.dto.request.*;
+import com.snp.dev.user_management_service.dto.response.AuthResponse;
+import com.snp.dev.user_management_service.dto.response.MfaSetupResponse;
+import com.snp.dev.user_management_service.dto.response.TokenRefreshResponse;
 import com.snp.dev.user_management_service.exception.AccountDisabledException;
 import com.snp.dev.user_management_service.exception.AccountLockedException;
 import com.snp.dev.user_management_service.exception.BadRequestException;
 import com.snp.dev.user_management_service.exception.ResourceNotFoundException;
-import com.snp.dev.user_management_service.model.User;
-import com.snp.dev.user_management_service.model.UserMetadata;
-import com.snp.dev.user_management_service.model.UserProfile;
-import com.snp.dev.user_management_service.model.UserSecurity;
-import com.snp.dev.user_management_service.repository.*;
 import com.snp.dev.user_management_service.security.JwtTokenProvider;
-import com.snp.dev.user_management_service.service.AuditService;
-import com.snp.dev.user_management_service.service.AuthService;
-import com.snp.dev.user_management_service.service.MfaService;
-import com.snp.dev.user_management_service.service.OtpService;
+import com.snp.dev.user_management_service.dto.*;
+import com.snp.dev.user_management_service.model.*;
+import com.snp.dev.user_management_service.repository.*;
+import com.snp.dev.user_management_service.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -41,6 +40,12 @@ public class AuthServiceImpl implements AuthService {
     private final MfaService mfaService;
     private final AuditService auditService;
 //    private final KafkaProducerService kafkaProducerService;
+
+    @Value("${app.kafka.email.enabled:false}")
+    private boolean kafkaEmailEnabled;
+
+    @Value("${app.audit-logs.enabled:false}")
+    private boolean auditLogsEnabled;
 
     @Override
     public Mono<ApiResponse<AuthResponse>> signUp(SignUpRequest signUpRequest) {
@@ -111,13 +116,16 @@ public class AuthServiceImpl implements AuthService {
 
                                 // Create token and response in parallel with email sending
                                 Mono<String> tokenMono = tokenProvider.createToken(savedUser.getUsername(), savedUser.getRoles());
-                                Mono<Void> emailMono = emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername())
-                                        .then();
-                                Mono<Void> auditMono = auditService.logUserEvent(
+
+                                Mono<Boolean> emailMono = kafkaEmailEnabled ?
+                                        emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername())
+                                        .thenReturn(true) : Mono.just(true);
+
+                                Mono<Boolean> auditMono = auditLogsEnabled ? auditService.logUserEvent(
                                         savedUser.getId(),
                                         "USER_SIGNUP",
                                         "New user registered with username: " + savedUser.getUsername()
-                                );
+                                ).thenReturn(true) : Mono.just(true);
 
                                 return Mono.zip(tokenMono, emailMono, auditMono)
                                         .flatMap(tuple1 -> {

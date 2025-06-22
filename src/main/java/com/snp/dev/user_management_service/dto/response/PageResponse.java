@@ -1,4 +1,4 @@
-package com.snp.dev.user_management_service.dto;
+package com.snp.dev.user_management_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

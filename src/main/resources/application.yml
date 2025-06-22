@@ -11,7 +11,7 @@ spring:
     mongodb:
       uri: mongodb://localhost:27017/userdb
       auto-index-creation: true
-      custom-converters: false
+#      custom-converters: false
 
   mail:
     host: smtp.gmail.com
@@ -50,45 +50,14 @@ spring:
     host: localhost
     port: 6379
 
-#    redis:
-#      repositories:
-#        enabled: false
-#
-#  autoconfigure:
-#    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-
-#  redis:
-#    host: localhost
-#    port: 6379
-#  kafka:
-#    bootstrap-servers: localhost:9092
-#    consumer:
-#      group-id: user-group
-#      auto-offset-reset: earliest
-#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#    producer:
-#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-
-#  spring.mail.host=smtp.example.com
-#  spring.mail.port=587
-#  spring.mail.username=your_email@example.com
-#  spring.mail.password=your_password
-#  spring.mail.properties.mail.smtp.auth=true
-#  spring.mail.properties.mail.smtp.starttls.enable=true
-#  spring.mail.default-encoding=UTF-8
-
-#  thymeleaf:
-#    check-template-location: false
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-    health:
-        show-details: always
+  health:
+    show-details: always
 
 
 jwt:
@@ -111,6 +80,10 @@ app:
   kafka:
     topics:
       email: user-emails
+    email:
+      enabled: true
+  audit-logs:
+    enabled: true
 
 logging:
   level:

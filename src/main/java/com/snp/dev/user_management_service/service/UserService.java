@@ -1,8 +1,8 @@
 package com.snp.dev.user_management_service.service;
 
-import com.snp.dev.user_management_service.dto.PageResponse;
+import com.snp.dev.user_management_service.dto.response.PageResponse;
 import com.snp.dev.user_management_service.dto.UserProfileDto;
-import com.snp.dev.user_management_service.dto.UserResponse;
+import com.snp.dev.user_management_service.dto.response.UserResponse;
 import com.snp.dev.user_management_service.model.User;
 import reactor.core.publisher.Mono;
 
