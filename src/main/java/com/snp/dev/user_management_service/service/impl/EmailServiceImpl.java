@@ -1,6 +1,7 @@
 package com.snp.dev.user_management_service.service.impl;
 
 import com.snp.dev.user_management_service.service.EmailService;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -8,8 +9,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import jakarta.mail.internet.MimeMessage;
 
 @Service
 @RequiredArgsConstructor

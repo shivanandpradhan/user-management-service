@@ -1,19 +1,14 @@
 package com.snp.dev.user_management_service.config;
 
 import com.snp.dev.user_management_service.dto.EmailMessage;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.kafka.support.converter.StringJsonMessageConverter;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
 import reactor.kafka.sender.SenderOptions;
 
 import java.util.HashMap;
@@ -43,23 +38,6 @@ public class KafkaConfig {
         // Return ReactiveKafkaProducerTemplate
         return new ReactiveKafkaProducerTemplate<>(senderOptions);
     }
-
-//    @Bean
-//    public ConsumerFactory<String, EmailMessage> consumerFactory() {
-//        JsonDeserializer<EmailMessage> deserializer = new JsonDeserializer<>(EmailMessage.class);
-//        deserializer.addTrustedPackages("*");
-//
-//        return new DefaultKafkaConsumerFactory<>(
-//                Map.of(
-//                        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092",
-//                        ConsumerConfig.GROUP_ID_CONFIG, "user-management-group",
-//                        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-//                        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class
-//                ),
-//                new StringDeserializer(),
-//                deserializer
-//        );
-//    }
 
     @Bean
     public StringJsonMessageConverter messageConverter() {

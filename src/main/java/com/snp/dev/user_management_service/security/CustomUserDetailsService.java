@@ -28,19 +28,6 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
                         .credentialsExpired(!user.isCredentialsNonExpired())
                         .disabled(!user.isEnabled())
                         .build());
-//        // Create a dummy user //todo will remove below
-//        UserDetails dummyUser = User.builder()
-//                .username("dummy_user")
-//                .password("{noop}password") // Use "{noop}" for plain text password
-//                .roles("USER") // You can set roles like "USER", "ADMIN", etc.
-//                .accountExpired(false)
-//                .accountLocked(false)
-//                .credentialsExpired(false)
-//                .disabled(false)
-//                .build();
-//
-//        // Return Mono.just(dummyUser)
-//        return Mono.just(dummyUser);
 
     }
 }

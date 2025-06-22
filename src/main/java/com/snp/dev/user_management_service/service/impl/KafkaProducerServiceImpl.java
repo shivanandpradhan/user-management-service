@@ -65,9 +65,9 @@ import com.snp.dev.user_management_service.dto.EmailMessage;
 import com.snp.dev.user_management_service.service.KafkaProducerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Value;
 import reactor.core.publisher.Mono;
 import reactor.kafka.sender.SenderResult;
 
