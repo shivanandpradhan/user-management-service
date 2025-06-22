@@ -9,39 +9,11 @@ spring:
       auto-index-creation: true
       custom-converters: false
 
-  redis:
-    host: localhost
-    port: 6379
-
-otp:
-  length: 6
-  expiry-minutes: 5
-#    redis:
-#      repositories:
-#        enabled: false
-#
-#  autoconfigure:
-#    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-
-#  redis:
-#    host: localhost
-#    port: 6379
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: user-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-
   mail:
-    host: smtp.example.com
+    host: smtp.gmail.com
     port: 587
-    username: admin@example.com
-    password: password
+    username: shiva2000shivam@gmail.com
+    password: ufsahtadtyuntwtx
     properties:
       mail:
         smtp:
@@ -53,6 +25,60 @@ otp:
           timeout: 5000
           write-timeout: 5000
           connection-timeout: 5000
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: user-management-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: com.snp.dev.user_management_service.serializers.EmailMessageSerializer
+      properties:
+        retries: 3
+        acks: all
+        delivery.timeout.ms: 30000
+        request.timeout.ms: 15000
+  redis:
+    host: localhost
+    port: 6379
+
+#    redis:
+#      repositories:
+#        enabled: false
+#
+#  autoconfigure:
+#    exclude: org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+#  redis:
+#    host: localhost
+#    port: 6379
+#  kafka:
+#    bootstrap-servers: localhost:9092
+#    consumer:
+#      group-id: user-group
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+
+otp:
+  length: 6
+  expiry-minutes: 5
+
+#  spring.mail.host=smtp.example.com
+#  spring.mail.port=587
+#  spring.mail.username=your_email@example.com
+#  spring.mail.password=your_password
+#  spring.mail.properties.mail.smtp.auth=true
+#  spring.mail.properties.mail.smtp.starttls.enable=true
+#  spring.mail.default-encoding=UTF-8
+
   thymeleaf:
     check-template-location: false
 management:
@@ -81,6 +107,9 @@ app:
   super-admin:
     initial-email: superadmin@example.com
     initial-password: ChangeMe123!
+  kafka:
+    topics:
+      email: user-emails
 
 logging:
   level:
