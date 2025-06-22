@@ -1,6 +1,10 @@
 package com.snp.dev.user_management_service.controller;
 
 import com.snp.dev.user_management_service.dto.*;
+import com.snp.dev.user_management_service.dto.request.*;
+import com.snp.dev.user_management_service.dto.response.AuthResponse;
+import com.snp.dev.user_management_service.dto.response.MfaSetupResponse;
+import com.snp.dev.user_management_service.dto.response.TokenRefreshResponse;
 import com.snp.dev.user_management_service.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

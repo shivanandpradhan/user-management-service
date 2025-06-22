@@ -1,4 +1,4 @@
-package com.snp.dev.user_management_service.dto;
+package com.snp.dev.user_management_service.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
+public class VerifyOtpRequest {
 
     @NotBlank(message = "Username or email cannot be blank")
     private String usernameOrEmail;
 
-    @NotBlank(message = "Password cannot be blank")
-    private String password;
+    @NotBlank(message = "OTP cannot be blank")
+    private String otp;
 }

@@ -1,4 +1,4 @@
-package com.snp.dev.user_management_service.dto;
+package com.snp.dev.user_management_service.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

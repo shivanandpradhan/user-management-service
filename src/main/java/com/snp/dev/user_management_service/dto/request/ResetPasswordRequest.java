@@ -1,4 +1,4 @@
-package com.snp.dev.user_management_service.dto;
+package com.snp.dev.user_management_service.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

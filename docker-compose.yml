@@ -36,3 +36,10 @@ services:
       kafka-topics --create --topic user-emails --partitions 1 --replication-factor 1 --if-not-exists --bootstrap-server kafka:9092 &&
       echo 'Topic user-emails created (if it did not exist).'
       "
+
+#      docker exec -it kafka bash
+#  kafka-topics --list --bootstrap-server localhost:9092
+#  docker exec -it kafka kafka-topics \
+#  --create --topic user-emails \
+#  --partitions 1 --replication-factor 1 \
+#  --if-not-exists --bootstrap-server localhost:9092
