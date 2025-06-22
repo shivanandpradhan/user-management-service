@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
-//    private final EmailService emailService;
+    private final EmailServiceImpl emailService;
     private final OtpService otpService;
     private final MfaService mfaService;
     private final AuditService auditService;
@@ -102,37 +102,32 @@ public class AuthServiceImpl implements AuthService {
                                         });
                             })
                             .flatMap(savedUser -> {
-                                // Send welcome email via Kafka
-                                Map<String, Object> emailVariables = new HashMap<>();
-                                emailVariables.put("username", savedUser.getUsername());
-                                emailVariables.put("email", savedUser.getEmail());
 
-//                                return kafkaProducerService.sendEmailEvent(
-//                                        savedUser.getEmail(),
-//                                        "welcome-email",
-//                                        emailVariables
-//                                ).thenReturn(savedUser);
-                                return Mono.just(savedUser);
-                            })
-                            .flatMap(savedUser -> {
-                                String token = tokenProvider.createToken(savedUser.getUsername(), savedUser.getRoles())
-                                        .block(); // Note: In reactive, we should avoid block(), but for JWT creation it's often necessary
-
-                                return auditService.logUserEvent(
+                                // Create token and response in parallel with email sending
+                                Mono<String> tokenMono = tokenProvider.createToken(savedUser.getUsername(), savedUser.getRoles());
+                                Mono<Void> emailMono = emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername())
+                                        .then();
+                                Mono<Void> auditMono = auditService.logUserEvent(
                                         savedUser.getId(),
                                         "USER_SIGNUP",
                                         "New user registered with username: " + savedUser.getUsername()
-                                ).thenReturn(ApiResponse.success(
-                                        AuthResponse.builder()
-                                                .accessToken(token)
-                                                .refreshToken(UUID.randomUUID().toString()) // In real app, generate proper refresh token
-                                                .mfaEnabled(false)
-                                                .userId(savedUser.getId())
-                                                .username(savedUser.getUsername())
-                                                .email(savedUser.getEmail())
-                                                .roles(savedUser.getRoles())
-                                                .build()
-                                ));
+                                );
+
+                                return Mono.zip(tokenMono, emailMono, auditMono)
+                                        .flatMap(tuple1 -> {
+                                            String token = tuple1.getT1();
+                                            return Mono.just(ApiResponse.success(
+                                                    AuthResponse.builder()
+                                                            .accessToken(token)
+                                                            .refreshToken(UUID.randomUUID().toString())
+                                                            .mfaEnabled(false)
+                                                            .userId(savedUser.getId())
+                                                            .username(savedUser.getUsername())
+                                                            .email(savedUser.getEmail())
+                                                            .roles(savedUser.getRoles())
+                                                            .build()
+                                            ));
+                                        });
                             });
                 })
                 .onErrorResume(e -> {
