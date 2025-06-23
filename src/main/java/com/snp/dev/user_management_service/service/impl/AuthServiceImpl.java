@@ -41,9 +41,6 @@ public class AuthServiceImpl implements AuthService {
     private final AuditService auditService;
 //    private final KafkaProducerService kafkaProducerService;
 
-    @Value("${app.kafka.email.enabled:false}")
-    private boolean kafkaEmailEnabled;
-
     @Value("${app.audit-logs.enabled:false}")
     private boolean auditLogsEnabled;
 
@@ -117,9 +114,8 @@ public class AuthServiceImpl implements AuthService {
                                 // Create token and response in parallel with email sending
                                 Mono<String> tokenMono = tokenProvider.createToken(savedUser.getUsername(), savedUser.getRoles());
 
-                                Mono<Boolean> emailMono = kafkaEmailEnabled ?
-                                        emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername())
-                                        .thenReturn(true) : Mono.just(true);
+                                Mono<Boolean> emailMono = emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername())
+                                        .thenReturn(true);
 
                                 Mono<Boolean> auditMono = auditLogsEnabled ? auditService.logUserEvent(
                                         savedUser.getId(),
@@ -185,8 +181,15 @@ public class AuthServiceImpl implements AuthService {
 
                             return userRepository.save(user)
                                     .then(userSecurityRepository.save(userSecurity))
-                                    .then(otpService.generateOtp(user.getEmail()))
-                                    .then(generateAuthResponse(user, userSecurity));
+                                    .then(Mono.defer(() -> otpService.generateOtpAndSendEmail(user.getEmail())))
+                                    .flatMap(otpSent -> {
+                                        if (otpSent) {
+                                            log.info("OTP successfully generated and sent to {}", user.getEmail());
+                                        } else {
+                                            log.warn("OTP generation failed for {}", user.getEmail());
+                                        }
+                                        return generateAuthResponse(user, userSecurity);
+                                    });
                         }))
                 .onErrorResume(e -> {
                     log.error("Login error: {}", e.getMessage());
@@ -197,11 +200,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private Mono<ApiResponse<AuthResponse>> generateAuthResponse(User user, UserSecurity userSecurity) {
-        if (userSecurity.isMfaEnabled()) {
+        if (userSecurity.isMfaEnabled() || userSecurity.isOtpLoginEnabled()) {
             // For MFA enabled users, don't return tokens yet
             return Mono.just(ApiResponse.success(
                     AuthResponse.builder()
-                            .mfaEnabled(true)
+                            .mfaEnabled(userSecurity.isMfaEnabled())
+                            .otpLoginEnabled(userSecurity.isOtpLoginEnabled())
                             .mfaType("TOTP") // or whatever MFA type you're using
                             .userId(user.getId())
                             .username(user.getUsername())
@@ -267,22 +271,9 @@ public class AuthServiceImpl implements AuthService {
 
                             return userSecurityRepository.findByUserId(user.getId())
                                     .flatMap(userSecurity -> {
-                                        if (userSecurity.isMfaEnabled()) {
+                                        if (!userSecurity.isOtpLoginEnabled() && userSecurity.isMfaEnabled()) {
                                             return Mono.error(new BadRequestException("MFA is already enabled"));
                                         }
-                                        // using inmemory otp service.
-//                                        return otpService.clearOtp(user.getEmail())
-//                                                .then(tokenProvider.createToken(user.getUsername(), user.getRoles())
-//                                                        .map(accessToken -> ApiResponse.success(
-//                                                                AuthResponse.builder()
-//                                                                        .accessToken(accessToken)
-//                                                                        .refreshToken(UUID.randomUUID().toString()) // In real app, generate proper refresh token
-//                                                                        .mfaEnabled(false)
-//                                                                        .userId(user.getId())
-//                                                                        .username(user.getUsername())
-//                                                                        .email(user.getEmail())
-//                                                                        .build()
-//                                                        )));
                                         return tokenProvider.createToken(user.getUsername(), user.getRoles())
                                                         .map(accessToken -> ApiResponse.success(
                                                                 AuthResponse.builder()
