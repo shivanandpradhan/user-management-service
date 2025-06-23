@@ -21,6 +21,7 @@ public class AuthResponse {
     private String refreshToken;
     private Boolean mfaEnabled;
     private String mfaType;
+    private Boolean otpLoginEnabled;
     private String userId;
     private String username;
     private String email;

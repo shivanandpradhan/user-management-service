@@ -20,6 +20,7 @@ public class UserSecurity {
     private String id;
     private String userId;
     private boolean mfaEnabled;
+    private boolean otpLoginEnabled;
     private String mfaSecret;
     private LocalDateTime lastPasswordResetDate;
     private int failedLoginAttempts;

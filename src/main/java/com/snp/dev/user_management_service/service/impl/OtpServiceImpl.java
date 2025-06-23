@@ -1,5 +1,6 @@
 package com.snp.dev.user_management_service.service.impl;
 
+import com.snp.dev.user_management_service.service.EmailService;
 import com.snp.dev.user_management_service.service.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class OtpServiceImpl implements OtpService {
 
     private final ReactiveRedisTemplate<String, String> redisTemplate;
     private final Scheduler scheduler = Schedulers.boundedElastic();
+    private final EmailService emailService;
 
     @Value("${app.otp.length}")
     private int otpLength;
@@ -35,6 +37,29 @@ public class OtpServiceImpl implements OtpService {
                 .thenReturn(otp)
                 .doOnSuccess(o -> log.info("Generated OTP for {}: {}", key, o))
                 .publishOn(scheduler);
+    }
+
+    @Override
+    public Mono<Boolean> generateOtpAndSendEmail(String email) {
+        return generateOtp(email)
+                .flatMap(otp -> {
+                    // Send OTP via email
+                    return emailService.sendOtpEmail(email, otp)
+                            .thenReturn(true)
+                            .doOnSuccess(sent -> {
+                                if (sent) {
+                                    log.info("OTP successfully generated and sent to {}", email);
+                                }
+                            })
+                            .onErrorResume(e -> {
+                                log.error("Failed to send OTP email to {}", email, e);
+                                // Even if email fails, OTP was generated successfully
+                                return Mono.just(true);
+                            });
+                })
+                .doOnError(e -> log.error("Failed to generate OTP for {}", email, e))
+                .defaultIfEmpty(false)
+                .publishOn(Schedulers.boundedElastic());
     }
 
     @Override
