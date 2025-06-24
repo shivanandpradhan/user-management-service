@@ -28,4 +28,9 @@ public class UserProfileDto {
     private String postalCode;
     private String profileImageUrl;
     private String bio;
+    private boolean enabled;
+    private Set<String> roles;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
+    private boolean accountLocked;
 }

@@ -178,6 +178,7 @@ public class AuthServiceImpl implements AuthService {
                             // Reset failed attempts on successful login
                             userSecurity.setFailedLoginAttempts(0);
                             userSecurity.setLastFailedLoginAttempt(null);
+                            userSecurity.setLastLoginDate(LocalDateTime.now());
 
                             return userRepository.save(user)
                                     .then(userSecurityRepository.save(userSecurity))

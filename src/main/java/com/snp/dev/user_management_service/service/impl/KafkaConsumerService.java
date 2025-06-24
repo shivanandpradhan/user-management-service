@@ -19,7 +19,10 @@ public class KafkaConsumerService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
-    @KafkaListener(topics = "${app.kafka.topics.email}")
+    @KafkaListener(
+            topics = "${app.kafka.topics.email}",
+            autoStartup = "#{${app.kafka.consumer-enabled}}"
+    )
     public void handleEmailMessage(EmailMessage message) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
