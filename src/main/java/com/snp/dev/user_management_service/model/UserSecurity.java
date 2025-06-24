@@ -29,4 +29,5 @@ public class UserSecurity {
     private LocalDateTime accountLockedUntil;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastLoginDate;
 }

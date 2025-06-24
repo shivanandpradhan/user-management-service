@@ -7,6 +7,7 @@ import com.snp.dev.user_management_service.exception.ForbiddenException;
 import com.snp.dev.user_management_service.exception.ResourceNotFoundException;
 import com.snp.dev.user_management_service.model.User;
 import com.snp.dev.user_management_service.model.UserProfile;
+import com.snp.dev.user_management_service.model.UserSecurity;
 import com.snp.dev.user_management_service.repository.CustomUserRepository;
 import com.snp.dev.user_management_service.repository.UserProfileRepository;
 import com.snp.dev.user_management_service.repository.UserRepository;
@@ -55,9 +56,30 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<UserProfileDto> getUserProfile(String userId) {
-        return userProfileRepository.findByUserId(userId)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User profile not found")))
-                .map(this::mapToProfileDto);
+        // Use Mono.zip to combine data from userRepository and userProfileRepository
+        return Mono.zip(
+                        userRepository.findById(userId)
+                                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found"))),
+                        userProfileRepository.findByUserId(userId)
+                                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User profile not found"))),
+                        userSecurityRepository.findByUserId(userId)
+                                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User security not found")))
+                )
+                .map(tuple -> {
+                    // Extract User and UserProfile from the tuple
+                    User user = tuple.getT1();
+                    UserProfile userProfile = tuple.getT2();
+                    UserSecurity userSecurity = tuple.getT3();
+
+                    // Map to UserProfileDto and set additional fields from User
+                    UserProfileDto userProfileDto = mapToProfileDto(userProfile);
+                    userProfileDto.setEnabled(user.isEnabled());
+                    userProfileDto.setRoles(user.getRoles());
+                    userProfileDto.setCreatedAt(user.getCreatedAt());
+                    userProfileDto.setLastLogin(userSecurity.getLastLoginDate());
+                    userProfileDto.setAccountLocked(!user.isAccountNonLocked());
+                    return userProfileDto;
+                });
     }
 
     @Override
