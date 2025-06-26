@@ -31,8 +31,11 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public Mono<ResponseEntity<ApiResponse<AuthResponse>>> verifyOtp(@RequestBody VerifyOtpRequest verifyOtpRequest) {
-        return authService.verifyOtp(verifyOtpRequest)
+    public Mono<ResponseEntity<ApiResponse<AuthResponse>>> verifyOtp(
+            @RequestBody VerifyOtpRequest verifyOtpRequest,
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        return authService.verifyOtp(verifyOtpRequest, userId)
                 .map(ResponseEntity::ok);
     }
 

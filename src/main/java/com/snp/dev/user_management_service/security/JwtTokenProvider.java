@@ -1,8 +1,8 @@
 package com.snp.dev.user_management_service.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.snp.dev.user_management_service.exception.InvalidTokenException;
+import com.snp.dev.user_management_service.exception.TokenExpiredException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.security.Key;
 import java.util.*;
@@ -32,6 +33,43 @@ public class JwtTokenProvider {
         this.validityInMilliseconds = validityInMilliseconds;
         this.issuer = issuer;
         this.userDetailsService = userDetailsService;
+    }
+
+    @Value("${app.jwt.passwordResetTokenExpirationMs}")
+    private long passwordResetTokenExpirationMs;
+
+    @Value("${app.jwt.passwordResetSecret}")
+    private String passwordResetSecret;
+
+//    @Override
+    public String generatePasswordResetToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + passwordResetTokenExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, passwordResetSecret)
+                .compact();
+    }
+
+//    @Override
+    public Mono<String> validatePasswordResetToken(String token) {
+        return Mono.fromCallable(() -> {
+            try {
+                Claims claims = Jwts.parser()
+                        .setSigningKey(passwordResetSecret)
+                        .parseClaimsJws(token)
+                        .getBody();
+
+                return claims.getSubject();
+            } catch (ExpiredJwtException ex) {
+                throw new TokenExpiredException("Password reset token expired");
+            } catch (JwtException | IllegalArgumentException ex) {
+                throw new InvalidTokenException("Invalid password reset token");
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     public Mono<String> createToken(Authentication authentication) {

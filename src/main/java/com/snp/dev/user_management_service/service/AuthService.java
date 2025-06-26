@@ -12,7 +12,7 @@ public interface AuthService {
 
     Mono<ApiResponse<AuthResponse>> signUp(SignUpRequest signUpRequest);
     Mono<ApiResponse<AuthResponse>> login(LoginRequest loginRequest);
-    Mono<ApiResponse<AuthResponse>> verifyOtp(VerifyOtpRequest verifyOtpRequest);
+    Mono<ApiResponse<AuthResponse>> verifyOtp(VerifyOtpRequest verifyOtpRequest, String userId);
     Mono<ApiResponse<Void>> forgotPassword(ForgotPasswordRequest forgotPasswordRequest);
     Mono<ApiResponse<Void>> resetPassword(ResetPasswordRequest resetPasswordRequest);
     Mono<ApiResponse<Void>> changePassword(ChangePasswordRequest changePasswordRequest, String userId);

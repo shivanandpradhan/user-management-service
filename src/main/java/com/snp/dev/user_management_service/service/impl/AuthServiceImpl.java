@@ -4,10 +4,7 @@ import com.snp.dev.user_management_service.dto.request.*;
 import com.snp.dev.user_management_service.dto.response.AuthResponse;
 import com.snp.dev.user_management_service.dto.response.MfaSetupResponse;
 import com.snp.dev.user_management_service.dto.response.TokenRefreshResponse;
-import com.snp.dev.user_management_service.exception.AccountDisabledException;
-import com.snp.dev.user_management_service.exception.AccountLockedException;
-import com.snp.dev.user_management_service.exception.BadRequestException;
-import com.snp.dev.user_management_service.exception.ResourceNotFoundException;
+import com.snp.dev.user_management_service.exception.*;
 import com.snp.dev.user_management_service.security.JwtTokenProvider;
 import com.snp.dev.user_management_service.dto.*;
 import com.snp.dev.user_management_service.model.*;
@@ -131,6 +128,7 @@ public class AuthServiceImpl implements AuthService {
                                                             .accessToken(token)
                                                             .refreshToken(UUID.randomUUID().toString())
                                                             .mfaEnabled(false)
+                                                            .otpLoginEnabled(false)
                                                             .userId(savedUser.getId())
                                                             .username(savedUser.getUsername())
                                                             .email(savedUser.getEmail())
@@ -182,15 +180,7 @@ public class AuthServiceImpl implements AuthService {
 
                             return userRepository.save(user)
                                     .then(userSecurityRepository.save(userSecurity))
-                                    .then(Mono.defer(() -> otpService.generateOtpAndSendEmail(user.getEmail())))
-                                    .flatMap(otpSent -> {
-                                        if (otpSent) {
-                                            log.info("OTP successfully generated and sent to {}", user.getEmail());
-                                        } else {
-                                            log.warn("OTP generation failed for {}", user.getEmail());
-                                        }
-                                        return generateAuthResponse(user, userSecurity);
-                                    });
+                                    .then(generateAuthLoginResponse(user, userSecurity));
                         }))
                 .onErrorResume(e -> {
                     log.error("Login error: {}", e.getMessage());
@@ -200,28 +190,38 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
-    private Mono<ApiResponse<AuthResponse>> generateAuthResponse(User user, UserSecurity userSecurity) {
-        if (userSecurity.isMfaEnabled() || userSecurity.isOtpLoginEnabled()) {
-            // For MFA enabled users, don't return tokens yet
+    private Mono<ApiResponse<AuthResponse>> generateAuthLoginResponse(User user, UserSecurity userSecurity) {
+        if(userSecurity.isMfaEnabled()){
             return Mono.just(ApiResponse.success(
                     AuthResponse.builder()
                             .mfaEnabled(userSecurity.isMfaEnabled())
-                            .otpLoginEnabled(userSecurity.isOtpLoginEnabled())
-                            .mfaType("TOTP") // or whatever MFA type you're using
                             .userId(user.getId())
-                            .username(user.getUsername())
-                            .email(user.getEmail())
-                            .roles(user.getRoles())
                             .build()
             ));
+        } else if(userSecurity.isOtpLoginEnabled()){
+            return otpService.generateOtpAndSendEmail(user, userSecurity.isOtpLoginEnabled())
+                    .flatMap(otpSent -> {
+                        if (otpSent) {
+                            log.info("OTP successfully generated and sent to {}", user.getEmail());
+                        } else {
+                            log.warn("OTP generation failed for {}", user.getEmail());
+                        }
+                        return Mono.just(ApiResponse.success(
+                                AuthResponse.builder()
+                                        .otpLoginEnabled(userSecurity.isOtpLoginEnabled())
+                                        .userId(user.getId())
+                                        .build()
+                                ));
+                    });
         } else {
-            // For non-MFA users, generate tokens immediately
+            // For non-MFA and otp enabled users, generate tokens immediately
             return tokenProvider.createToken(user.getUsername(), user.getRoles())
                     .map(accessToken -> ApiResponse.success(
                             AuthResponse.builder()
                                     .accessToken(accessToken)
                                     .refreshToken(UUID.randomUUID().toString()) // In real app, generate proper refresh token
-                                    .mfaEnabled(false)
+                                    .mfaEnabled(userSecurity.isMfaEnabled())
+                                    .otpLoginEnabled(userSecurity.isMfaEnabled())
                                     .userId(user.getId())
                                     .username(user.getUsername())
                                     .email(user.getEmail())
@@ -261,8 +261,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Mono<ApiResponse<AuthResponse>> verifyOtp(VerifyOtpRequest verifyOtpRequest) {
-        return userRepository.findByUsernameOrEmail(verifyOtpRequest.getUsernameOrEmail(), verifyOtpRequest.getUsernameOrEmail())
+    public Mono<ApiResponse<AuthResponse>> verifyOtp(VerifyOtpRequest verifyOtpRequest, String userId) {
+        return  userRepository.findById(userId)
                 .switchIfEmpty(Mono.error(new BadRequestException("User not found")))
                 .flatMap(user -> otpService.validateOtp(user.getEmail(), verifyOtpRequest.getOtp())
                         .flatMap(valid -> {
@@ -299,35 +299,93 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Mono<ApiResponse<Void>> forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
         return userRepository.findByEmail(forgotPasswordRequest.getEmail())
-                .switchIfEmpty(Mono.error(new BadRequestException("Email not found")))
+                .switchIfEmpty(Mono.error(new BadRequestException("User not found with email: " + forgotPasswordRequest.getEmail())))
                 .flatMap(user -> {
-                    String resetToken = UUID.randomUUID().toString();
-                    // In a real app, you would save this token with an expiry date
+                    // Generate reset token
+                    String resetToken = tokenProvider.generatePasswordResetToken(user.getEmail());
 
-                    // Send password reset email via Kafka
-                    Map<String, Object> emailVariables = new HashMap<>();
-                    emailVariables.put("username", user.getUsername());
-                    emailVariables.put("resetToken", resetToken);
-//
-//                    return kafkaProducerService.sendEmailEvent(
-//                            user.getEmail(),
-//                            "password-reset",
-//                            emailVariables
-//                    ).thenReturn(ApiResponse.<Void>success(null));z
-                    return Mono.just(ApiResponse.<Void>success(null));
+                    return userSecurityRepository.findByUserId(user.getId())
+                            .switchIfEmpty(Mono.error(new ResourceNotFoundException("User security record not found")))
+                            .flatMap(userSecurity -> {
+                                userSecurity.setLastPasswordResetDate(LocalDateTime.now());
+
+                                return userSecurityRepository.save(userSecurity).flatMap(savedUserSecurity -> {
+                                    Mono<Boolean> emailMono = emailService.sendPasswordResetEmail(user.getEmail(), resetToken)
+                                            .thenReturn(true);
+
+                                    Mono<Boolean> auditMono = auditLogsEnabled ?
+                                            auditService.logUserEvent(
+                                                    user.getId(),
+                                                    "USER_RESET_PASSWORD",
+                                                    "Request made to reset password: " + user.getUsername()
+                                            ).thenReturn(true)
+                                            : Mono.just(true);
+
+                                    return Mono.zip(auditMono, emailMono)
+                                            .thenReturn(ApiResponse.<Void>success(null));
+//                                            .thenReturn(new ApiResponse<Void>(true,
+//                                                    "If an account exists with this email, a password reset link has been sent", null));
+                                });
+                            });
                 })
                 .onErrorResume(e -> {
-                    log.error("Forgot password error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
-                            new ApiResponse.ErrorDetail("FORGOT_PASSWORD_ERROR", e.getMessage(), null, null)
-                    )));
+                    log.error("Error in forgot password process: {}", e.getMessage());
+                    return Mono.error(new ApiErrorException(
+                            ApiResponse.error(Collections.singletonList(
+                                    new ApiResponse.ErrorDetail("FORGOT_PASSWORD_ERROR", e.getMessage(), null, null)
+                            ))
+                    ));
+
+//                    return Mono.just(new ApiResponse<Void>(false, "Error processing password reset request", null));
                 });
     }
 
     @Override
     public Mono<ApiResponse<Void>> resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        // In a real app, you would validate the token first
-        return Mono.error(new UnsupportedOperationException("Reset password not implemented"));
+        // Validate token first
+        return tokenProvider.validatePasswordResetToken(resetPasswordRequest.getToken())
+                .flatMap(email -> userRepository.findByEmail(email)
+                        .switchIfEmpty(Mono.error(new BadRequestException("User not found with email: " + email)))
+                        .flatMap(user -> {
+                            // Update password
+                            String encodedPassword = passwordEncoder.encode(resetPasswordRequest.getNewPassword());
+                            user.setPassword(encodedPassword);
+
+                            // Update user security
+                            return userSecurityRepository.findByUserId(user.getId())
+                                    .switchIfEmpty(Mono.error(new ResourceNotFoundException("User security record not found")))
+                                    .flatMap(userSecurity -> {
+                                        userSecurity.setLastPasswordResetDate(LocalDateTime.now());
+                                        userSecurity.setPasswordResetRequired(false);
+                                        userSecurity.setFailedLoginAttempts(0);
+                                        return userSecurityRepository.save(userSecurity);
+                                    })
+                                    .then(userRepository.save(user))
+                                    .then(auditService.logUserEvent(
+                                                    user.getId(),
+                                                    "PASSWORD_RESET_SUCCESS",
+                                                    "User reset his password")
+                                    )
+                                    .thenReturn(ApiResponse.<Void>success(null));
+                        })
+                        .onErrorResume(e -> {
+                            log.error("Error in reset password process: {}", e.getMessage());
+                            if (e instanceof TokenExpiredException) {
+                                return Mono.error(new ApiErrorException(
+                                        ApiResponse.error(Collections.singletonList(
+                                                new ApiResponse.ErrorDetail("RESET_PASSWORD_ERROR", "Password reset token has expired", null, null)
+                                        ))));
+                            } else if (e instanceof InvalidTokenException) {
+                                return Mono.error(new ApiErrorException(
+                                        ApiResponse.error(Collections.singletonList(
+                                                new ApiResponse.ErrorDetail("RESET_PASSWORD_ERROR", "Invalid password reset token", null, null)
+                                        ))));
+                            }
+                            return Mono.error(new ApiErrorException(
+                                    ApiResponse.error(Collections.singletonList(
+                                            new ApiResponse.ErrorDetail("RESET_PASSWORD_ERROR", "Error resetting password", null, null)
+                                    ))));
+                        }));
     }
 
     @Override
@@ -348,7 +406,7 @@ public class AuthServiceImpl implements AuthService {
                                     .then(auditService.logUserEvent(
                                             user.getId(),
                                             "PASSWORD_CHANGED",
-                                            "User changed their password"
+                                            "User changed his password"
                                     ))
 //                                    .then(kafkaProducerService.sendEmailEvent(
 //                                            user.getEmail(),

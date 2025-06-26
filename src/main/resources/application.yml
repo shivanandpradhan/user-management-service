@@ -46,6 +46,7 @@ spring:
         delivery.timeout.ms: 30000
         request.timeout.ms: 15000
 
+
   redis:
     host: localhost
     port: 6379
@@ -82,8 +83,12 @@ app:
       email: user-emails
     email:
       enabled: true
+    consumer-enabled: true
   audit-logs:
     enabled: true
+  jwt:
+    passwordResetSecret: "N5hPo20+wbM/U5wfDdq68oLUUHyTHA/A7pCpIMJWtT1ObBd4IYGD+CxrgEGnsreNghenpMmeUHUcPm4SoRO5sw=="
+    passwordResetTokenExpirationMs: 86400000 # 24 hours
 
 logging:
   level:

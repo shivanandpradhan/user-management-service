@@ -117,7 +117,7 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
                 .subject("Password Reset Request")
                 .template("password-reset")
                 .variables(Map.of(
-                        "resetLink", "https://yourapp.com/reset?token=" + resetToken,
+                        "resetLink", "http://localhost:5173/reset-password/" + resetToken,
                         "expiryHours", 24
                 ))
                 .build();
