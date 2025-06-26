@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/verify-otp").permitAll()
+                                .pathMatchers(HttpMethod.POST, "/api/auth/mfa/verify").permitAll()
                         .pathMatchers("/api/auth/refresh-token").authenticated()
                                 .pathMatchers(
                                         "/swagger-ui.html",

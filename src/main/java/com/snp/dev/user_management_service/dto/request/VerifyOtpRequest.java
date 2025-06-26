@@ -12,9 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VerifyOtpRequest {
 
-    @NotBlank(message = "Username or email cannot be blank")
-    private String usernameOrEmail;
-
     @NotBlank(message = "OTP cannot be blank")
     private String otp;
+
 }

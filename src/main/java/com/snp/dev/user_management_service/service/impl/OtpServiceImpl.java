@@ -1,5 +1,6 @@
 package com.snp.dev.user_management_service.service.impl;
 
+import com.snp.dev.user_management_service.model.User;
 import com.snp.dev.user_management_service.service.EmailService;
 import com.snp.dev.user_management_service.service.OtpService;
 import lombok.RequiredArgsConstructor;
@@ -40,24 +41,26 @@ public class OtpServiceImpl implements OtpService {
     }
 
     @Override
-    public Mono<Boolean> generateOtpAndSendEmail(String email) {
-        return generateOtp(email)
+    public Mono<Boolean> generateOtpAndSendEmail(User user, boolean sendOtpEmail) {
+        return generateOtp(user.getEmail())
                 .flatMap(otp -> {
                     // Send OTP via email
-                    return emailService.sendOtpEmail(email, otp)
+                    if (!sendOtpEmail) return Mono.empty();
+
+                    return emailService.sendOtpEmail(user.getEmail(), otp)
                             .thenReturn(true)
                             .doOnSuccess(sent -> {
                                 if (sent) {
-                                    log.info("OTP successfully generated and sent to {}", email);
+                                    log.info("OTP successfully generated and sent to {}", user.getEmail());
                                 }
                             })
                             .onErrorResume(e -> {
-                                log.error("Failed to send OTP email to {}", email, e);
+                                log.error("Failed to send OTP email to {}", user.getEmail(), e);
                                 // Even if email fails, OTP was generated successfully
                                 return Mono.just(true);
                             });
                 })
-                .doOnError(e -> log.error("Failed to generate OTP for {}", email, e))
+                .doOnError(e -> log.error("Failed to generate OTP for {}", user.getEmail(), e))
                 .defaultIfEmpty(false)
                 .publishOn(Schedulers.boundedElastic());
     }
