@@ -9,7 +9,7 @@ spring:
     allow-bean-definition-overriding: true
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI}
+      uri: mongodb+srv://shiva2000shivam:Jammu%40123@usermanagement.wyis8vf.mongodb.net/userdb?appName=UserManagement
       auto-index-creation: true
 #      custom-converters: false
 
@@ -90,7 +90,9 @@ app:
     passwordResetSecret: "N5hPo20+wbM/U5wfDdq68oLUUHyTHA/A7pCpIMJWtT1ObBd4IYGD+CxrgEGnsreNghenpMmeUHUcPm4SoRO5sw=="
     passwordResetTokenExpirationMs: 86400000 # 24 hours
 
-logging:
+  cors:
+    allowed:
+      uriList: http://localhost:5173, https://shivanandpradhan.github.io
   level:
     root: INFO
     org.springframework: INFO
