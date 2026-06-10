@@ -5,6 +5,7 @@ import com.snp.dev.user_management_service.security.JwtAuthenticationFilter;
 import com.snp.dev.user_management_service.security.JwtAuthenticationWebFilter;
 import com.snp.dev.user_management_service.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,6 +27,7 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -33,6 +35,9 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
+
+    @Value("${app.cors.allowed.uriList}")
+    List<String> corsAllowedList;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -80,7 +85,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // Allow specific origin
+        corsConfiguration.setAllowedOrigins(corsAllowedList); // Allow specific origin
         corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allow specific HTTP methods
         corsConfiguration.setAllowedHeaders(Arrays.asList("*")); // Allow all headers
         corsConfiguration.setAllowCredentials(true); // Allow credentials (cookies, etc.)
