@@ -4,6 +4,7 @@ import com.snp.dev.user_management_service.exception.InvalidTokenException;
 import com.snp.dev.user_management_service.exception.TokenExpiredException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class JwtTokenProvider {
 
     private final Key key;
@@ -143,19 +145,22 @@ public class JwtTokenProvider {
                     .setSigningKey(key)
                     .parseClaimsJws(token)
                     .getBody();
-
-            return new UsernamePasswordAuthenticationToken(
-                    claims.getSubject(),
-                    null,
-                    Collections.emptyList());
-        }).flatMap(auth ->
-                userDetailsService.findByUsername(auth.getName())
-                        .map(userDetails -> new UsernamePasswordAuthenticationToken(
-                                userDetails.getUsername(),
+            return claims.getSubject(); // username
+        }).flatMap(username -> {
+            if (username == null) {
+                return Mono.error(new RuntimeException("Username not found in token"));
+            }
+            return userDetailsService.findByUsername(username)
+                    .switchIfEmpty(Mono.error(new RuntimeException("User not found: " + username)))
+                    .map(userDetails -> {
+                        // Create Authentication with full UserDetails
+                        return new UsernamePasswordAuthenticationToken(
+                                userDetails,
                                 null,
                                 userDetails.getAuthorities()
-                        ))
-        );
+                        );
+                    });
+        });
     }
 }
 

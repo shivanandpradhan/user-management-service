@@ -1,12 +1,14 @@
 package com.snp.dev.user_management_service.exception;
 
 import com.snp.dev.user_management_service.dto.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(WebExchangeBindException.class)
@@ -93,6 +96,24 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(Collections.singletonList(
                         new ApiResponse.ErrorDetail("ACCESS_DENIED", ex.getMessage(), null, null)
                 ))));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleResponseStatusException(ResponseStatusException ex) {
+        log.error("ResponseStatusException: {}", ex.getMessage());
+
+        ApiResponse<Void> response = ApiResponse.error(
+                Collections.singletonList(
+                        new ApiResponse.ErrorDetail(
+                                "AUTH_ERROR",
+                                ex.getReason(),
+                                null,
+                                null
+                        )
+                )
+        );
+
+        return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(response));
     }
 
     @ExceptionHandler(Exception.class)

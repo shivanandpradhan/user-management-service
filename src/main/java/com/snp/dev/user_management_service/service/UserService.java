@@ -1,5 +1,6 @@
 package com.snp.dev.user_management_service.service;
 
+import com.snp.dev.user_management_service.dto.ApiResponse;
 import com.snp.dev.user_management_service.dto.response.PageResponse;
 import com.snp.dev.user_management_service.dto.UserProfileDto;
 import com.snp.dev.user_management_service.dto.response.UserResponse;
@@ -20,4 +21,5 @@ public interface UserService {
     Mono<Void> disableUser(String userId, String adminId);
     Mono<User> updateUser(User user);
     Mono<PageResponse<UserResponse>> listUsers(int page, int limit);
+    Mono<ApiResponse<Boolean>> canEditPortfolio(String userId, String userId1);
 }

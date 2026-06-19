@@ -5,8 +5,10 @@ import com.snp.dev.user_management_service.dto.UserSecurityDto;
 import com.snp.dev.user_management_service.model.UserSecurity;
 import com.snp.dev.user_management_service.repository.UserRepository;
 import com.snp.dev.user_management_service.repository.UserSecurityRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +29,12 @@ public class UserSecurityController {
 
     @GetMapping("/me/security")
     public Mono<ResponseEntity<ApiResponse<UserSecurityDto>>> getUserSecurity(
-            @AuthenticationPrincipal String username) {
-        return userRepository.findByUsername(username)
+            @AuthenticationPrincipal UserDetails userDetails) {
+        if(userDetails == null || StringUtils.isEmpty(userDetails.getUsername())){
+            return Mono.just(ResponseEntity.notFound().build());
+        }
+
+        return userRepository.findByUsername(userDetails.getUsername())
                 .flatMap(user -> userSecurityRepository.findByUserId(user.getId()))
                 .map(security -> ResponseEntity.ok(ApiResponse.success(mapToDto(security))))
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));

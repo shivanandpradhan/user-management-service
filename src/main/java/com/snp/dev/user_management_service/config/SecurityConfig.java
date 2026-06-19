@@ -1,27 +1,20 @@
 package com.snp.dev.user_management_service.config;
 
-import com.snp.dev.user_management_service.security.JwtAuthenticationConverter;
 import com.snp.dev.user_management_service.security.JwtAuthenticationFilter;
-import com.snp.dev.user_management_service.security.JwtAuthenticationWebFilter;
 import com.snp.dev.user_management_service.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -46,6 +39,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+
+        // Create a custom matcher for public endpoints
+        ServerWebExchangeMatcher publicMatcher = exchange -> {
+            String path = exchange.getRequest().getPath().pathWithinApplication().value();
+            boolean isPublic = path.contains("/public/") || path.endsWith("/public");
+            return isPublic ?
+                    ServerWebExchangeMatcher.MatchResult.match() :
+                    ServerWebExchangeMatcher.MatchResult.notMatch();
+        };
+
+
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
@@ -53,13 +57,15 @@ public class SecurityConfig {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/api/auth/verify-otp").permitAll()
+                                .matchers(publicMatcher).permitAll()
+                                .pathMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                                .pathMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                                .pathMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
+                                .pathMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+                                .pathMatchers(HttpMethod.POST, "/api/auth/verify-otp").permitAll()
                                 .pathMatchers(HttpMethod.POST, "/api/auth/mfa/verify").permitAll()
-                        .pathMatchers("/api/auth/refresh-token").authenticated()
+                                .pathMatchers(HttpMethod.GET, "/api/portfolio").permitAll()
+                                .pathMatchers("/api/auth/refresh-token").authenticated()
                                 .pathMatchers(
                                         "/swagger-ui.html",
                                         "/swagger-ui/**",
@@ -67,11 +73,11 @@ public class SecurityConfig {
                                         "/webjars/**"
                                 ).permitAll()
                                 .pathMatchers("actuator/**").permitAll()
-                        .pathMatchers(("/api/test/**")).permitAll()
-//                        .pathMatchers("/api/**").permitAll()
-                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
-                        .pathMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
-                        .anyExchange().authenticated()
+                                .pathMatchers(("/api/test/**")).permitAll()
+        //                        .pathMatchers("/api/**").permitAll()
+                                .pathMatchers("/api/admin/**").hasRole("ADMIN")
+                                .pathMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
+                                .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();

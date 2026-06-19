@@ -38,4 +38,6 @@ public class User {
     private LocalDateTime updatedAt;
     private String createdBy;
     private String updatedBy;
+    public boolean editAllowed;
+    private Set<String> allowedEditors = new HashSet<>();
 }
