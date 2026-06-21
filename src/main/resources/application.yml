@@ -1,0 +1,118 @@
+
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: user-management-service
+  main:
+    allow-bean-definition-overriding: true
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI}
+      auto-index-creation: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SPRING_EMAIL_USERNAME}
+    password: ${SPRING_EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        transport:
+          protocol: smtp
+          timeout: 5000
+          write-timeout: 5000
+          connection-timeout: 5000
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: user-management-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: com.snp.dev.user_management_service.serializers.EmailMessageSerializer
+      properties:
+        retries: 3
+        acks: all
+        delivery.timeout.ms: 30000
+        request.timeout.ms: 15000
+
+
+  redis:
+    host: localhost
+    port: 6379
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+  health:
+    show-details: always
+
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  issuer: user-management-service
+
+app:
+  otp:
+    length: 6
+    expiry-minutes: 5
+  mfa:
+    issuer: UserManagement
+  rate-limit:
+    signup: 3
+    window: 1h
+  super-admin:
+    initial-email: ${SUPER_ADMIN_EMAIL}
+    initial-password: ${SUPER_ADMIN_PASSWORD}
+  kafka:
+    topics:
+      email: user-emails
+    email:
+      enabled: false
+    consumer-enabled: false
+  audit-logs:
+    enabled: true
+  jwt:
+    passwordResetSecret: ${JWT_PASSWORD_SECRET}
+    passwordResetTokenExpirationMs: ${JWT_PASSWORD_EXPIRY}
+  cors:
+    allowed:
+      uriList: ${CORS_ALLOWED_LIST}
+  level:
+    root: INFO
+    org.springframework: INFO
+    #    org.springframework: DEBUG
+    com.snp.dev.user-management-service: DEBUG
+
+  data:
+    initialize:
+      projects: true
+      resume: true
+      force: false
+    projects-file: data/projects.json
+    resume-file: data/resume.json
+    portfolio-user:
+      enabled: true
+      id: ${PORTFOLIO_USER_ID}
+      username: ${PORTFOLIO_USER_NAME}
+      email: ${PORTFOLIO_USER_EMAIL}
+      password: ${PORTFOLIO_USER_PASSWORD}
+      roles:
+        - "ROLE_PORTFOLIO"
+        - "ROLE_USER"
+      account-non-expired: true
+      account-non-locked: true
+      credentials-non-expired: true
