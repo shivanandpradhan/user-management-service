@@ -1,9 +1,10 @@
 package com.snp.dev.user_management_service.service.impl;
 
 import com.snp.dev.user_management_service.dto.ApiResponse;
-import com.snp.dev.user_management_service.dto.response.PageResponse;
 import com.snp.dev.user_management_service.dto.UserProfileDto;
+import com.snp.dev.user_management_service.dto.response.PageResponse;
 import com.snp.dev.user_management_service.dto.response.UserResponse;
+import com.snp.dev.user_management_service.exception.ApiErrorException;
 import com.snp.dev.user_management_service.exception.ForbiddenException;
 import com.snp.dev.user_management_service.exception.ResourceNotFoundException;
 import com.snp.dev.user_management_service.model.User;
@@ -307,9 +308,9 @@ public class UserServiceImpl implements UserService {
         log.debug("Checking if user {} can edit portfolio of {}", requesterId, ownerId);
 
         if (ownerId == null || requesterId == null) {
-            return Mono.just(ApiResponse.<Boolean>error(Collections.singletonList(
+            return Mono.error(new ApiErrorException(ApiResponse.<Boolean>error(Collections.singletonList(
                     new ApiResponse.ErrorDetail("VALIDATION_ERROR", "Owner ID and Requester ID cannot be null", null, null)
-            )));
+            ))));
         }
 
         if (ownerId.equals(requesterId)) {
@@ -328,15 +329,15 @@ public class UserServiceImpl implements UserService {
                     return ApiResponse.<Boolean>success(canEdit);
                 })
                 .switchIfEmpty(Mono.defer(() ->
-                        Mono.just(ApiResponse.<Boolean>error(Collections.singletonList(
+                        Mono.error(new ApiErrorException(ApiResponse.<Boolean>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("NOT_FOUND", "Portfolio not found for user: " + ownerId, null, null)
                         )))
-                ))
+                )))
                 .onErrorResume(e -> {
                     log.error("Error checking edit permission: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<Boolean>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<Boolean>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("PERMISSION_ERROR", "Failed to check permission: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 

@@ -1,15 +1,22 @@
 package com.snp.dev.user_management_service.service.impl;
 
+import com.snp.dev.user_management_service.dto.ApiResponse;
 import com.snp.dev.user_management_service.dto.request.*;
 import com.snp.dev.user_management_service.dto.response.AuthResponse;
 import com.snp.dev.user_management_service.dto.response.MfaSetupResponse;
 import com.snp.dev.user_management_service.dto.response.TokenRefreshResponse;
 import com.snp.dev.user_management_service.exception.*;
-import com.snp.dev.user_management_service.security.JwtTokenProvider;
-import com.snp.dev.user_management_service.dto.*;
-import com.snp.dev.user_management_service.model.*;
+import com.snp.dev.user_management_service.model.User;
+import com.snp.dev.user_management_service.model.UserMetadata;
+import com.snp.dev.user_management_service.model.UserProfile;
+import com.snp.dev.user_management_service.model.UserSecurity;
 import com.snp.dev.user_management_service.repository.*;
-import com.snp.dev.user_management_service.service.*;
+import com.snp.dev.user_management_service.security.JwtTokenProvider;
+import com.snp.dev.user_management_service.service.AuditService;
+import com.snp.dev.user_management_service.service.AuthService;
+import com.snp.dev.user_management_service.service.MfaService;
+import com.snp.dev.user_management_service.service.OtpService;
+import com.snp.dev.user_management_service.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -138,11 +145,15 @@ public class AuthServiceImpl implements AuthService {
                                         });
                             });
                 })
-                .onErrorResume(e -> {
-                    log.error("Signup error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
-                            new ApiResponse.ErrorDetail("SIGNUP_ERROR", e.getMessage(), null, null)
-                    )));
+                .onErrorResume(ex -> {
+                    log.error("Signup error: {}", ex.getMessage());
+                    if (ExceptionUtil.isHandledException(ex)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(ex);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
+                            new ApiResponse.ErrorDetail("SIGNUP_ERROR", ex.getMessage(), null, null)
+                    ))));
                 });
     }
 
@@ -184,9 +195,13 @@ public class AuthServiceImpl implements AuthService {
                         }))
                 .onErrorResume(e -> {
                     log.error("Login error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                    if (ExceptionUtil.isHandledException(e)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("LOGIN_ERROR", e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -290,9 +305,13 @@ public class AuthServiceImpl implements AuthService {
                         })
                 .onErrorResume(e -> {
                     log.error("OTP verification error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                    if (ExceptionUtil.isHandledException(e)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("OTP_ERROR", e.getMessage(), null, null)
-                    )));
+                    ))));
                 }));
     }
 
@@ -330,6 +349,10 @@ public class AuthServiceImpl implements AuthService {
                 })
                 .onErrorResume(e -> {
                     log.error("Error in forgot password process: {}", e.getMessage());
+                    if (ExceptionUtil.isHandledException(e)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(e);
+                    }
                     return Mono.error(new ApiErrorException(
                             ApiResponse.error(Collections.singletonList(
                                     new ApiResponse.ErrorDetail("FORGOT_PASSWORD_ERROR", e.getMessage(), null, null)
@@ -380,6 +403,8 @@ public class AuthServiceImpl implements AuthService {
                                         ApiResponse.error(Collections.singletonList(
                                                 new ApiResponse.ErrorDetail("RESET_PASSWORD_ERROR", "Invalid password reset token", null, null)
                                         ))));
+                            } else if (ExceptionUtil.isHandledException(e)){
+                                return Mono.error(e);
                             }
                             return Mono.error(new ApiErrorException(
                                     ApiResponse.error(Collections.singletonList(
@@ -417,9 +442,13 @@ public class AuthServiceImpl implements AuthService {
                         }))
                 .onErrorResume(e -> {
                     log.error("Change password error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                    if (ExceptionUtil.isHandledException(e)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("CHANGE_PASSWORD_ERROR", e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -456,9 +485,13 @@ public class AuthServiceImpl implements AuthService {
                         }))
                 .onErrorResume(e -> {
                     log.error("MFA setup error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                    if (ExceptionUtil.isHandledException(e)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("MFA_SETUP_ERROR", e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -497,9 +530,13 @@ public class AuthServiceImpl implements AuthService {
                         }))
                 .onErrorResume(e -> {
                     log.error("MFA verification error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                    if (ExceptionUtil.isHandledException(e)) {
+                        // Let GlobalExceptionHandler handle it
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("MFA_VERIFY_ERROR", e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -532,9 +569,9 @@ public class AuthServiceImpl implements AuthService {
                         }))
                 .onErrorResume(e -> {
                     log.error("MFA disable error: {}", e.getMessage());
-                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("MFA_DISABLE_ERROR", e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 }

@@ -3,6 +3,7 @@ package com.snp.dev.user_management_service.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.snp.dev.user_management_service.dto.ApiResponse;
 import com.snp.dev.user_management_service.dto.portfolio.ResumeDTO;
+import com.snp.dev.user_management_service.exception.ApiErrorException;
 import com.snp.dev.user_management_service.model.Resume;
 import com.snp.dev.user_management_service.repository.ResumeRepository;
 import com.snp.dev.user_management_service.service.ResumeService;
@@ -34,15 +35,15 @@ public class ResumeServiceImpl implements ResumeService {
                 .map(this::mapToDTO)
                 .<ApiResponse<ResumeDTO>>map(ApiResponse::success)
                 .switchIfEmpty(Mono.defer(() ->
-                        Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                        Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("NOT_FOUND", "Resume not found for user: " + userId, null, null)
                         )))
-                ))
+                )))
                 .onErrorResume(e -> {
                     log.error("Error fetching public resume: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch resume: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -56,25 +57,25 @@ public class ResumeServiceImpl implements ResumeService {
                 .flatMap(canEditResponse -> {
                     Boolean canEdit = canEditResponse.getData();
                     if (canEdit == null || !canEdit) {
-                        return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                        return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("FORBIDDEN", "You don't have permission to view this resume", null, null)
-                        )));
+                        ))));
                     }
 
                     return resumeRepository.findByUserId(userId)
                             .map(this::mapToDTO)
                             .<ApiResponse<ResumeDTO>>map(ApiResponse::success)
                             .switchIfEmpty(Mono.defer(() ->
-                                    Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                                    Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                             new ApiResponse.ErrorDetail("NOT_FOUND", "Resume not found for user: " + userId, null, null)
                                     )))
-                            ));
+                            )));
                 })
                 .onErrorResume(e -> {
                     log.error("Error fetching resume: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch resume: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -87,9 +88,9 @@ public class ResumeServiceImpl implements ResumeService {
                 .switchIfEmpty(createNewResume(resumeDTO, userId))
                 .onErrorResume(throwable -> {
                     log.error("Error saving resume: {}", throwable.getMessage());
-                    return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("SAVE_ERROR", "Failed to save resume: " + throwable.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -101,24 +102,24 @@ public class ResumeServiceImpl implements ResumeService {
                 .flatMap(canEditResponse -> {
                     Boolean canEdit = canEditResponse.getData();
                     if (canEdit == null || !canEdit) {
-                        return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                        return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("FORBIDDEN", "You don't have permission to update this resume", null, null)
-                        )));
+                        ))));
                     }
 
                     return resumeRepository.findByUserId(userId)
                             .flatMap(existingResume -> updateExistingResume(existingResume, resumeDTO))
                             .switchIfEmpty(Mono.defer(() ->
-                                    Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                                    Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                             new ApiResponse.ErrorDetail("NOT_FOUND", "Resume not found for user: " + userId, null, null)
                                     )))
-                            ));
+                            )));
                 })
                 .onErrorResume(throwable -> {
                     log.error("Error updating resume: {}", throwable.getMessage());
-                    return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("UPDATE_ERROR", "Failed to update resume: " + throwable.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -168,15 +169,15 @@ public class ResumeServiceImpl implements ResumeService {
                     .<ApiResponse<ResumeDTO>>map(ApiResponse::success)
                     .onErrorResume(e -> {
                         log.error("Error updating existing resume: {}", e.getMessage());
-                        return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                        return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("UPDATE_ERROR", "Failed to update resume: " + e.getMessage(), null, null)
-                        )));
+                        ))));
                     });
         } catch (Exception e) {
             log.error("Error mapping DTO to entity: {}", e.getMessage());
-            return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+            return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                     new ApiResponse.ErrorDetail("UPDATE_ERROR", "Failed to update resume: " + e.getMessage(), null, null)
-            )));
+            ))));
         }
     }
 
@@ -195,15 +196,15 @@ public class ResumeServiceImpl implements ResumeService {
                     .<ApiResponse<ResumeDTO>>map(ApiResponse::success)
                     .onErrorResume(e -> {
                         log.error("Error creating new resume: {}", e.getMessage());
-                        return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+                        return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("CREATE_ERROR", "Failed to create resume: " + e.getMessage(), null, null)
-                        )));
+                        ))));
                     });
         } catch (Exception e) {
             log.error("Error mapping DTO to entity: {}", e.getMessage());
-            return Mono.just(ApiResponse.<ResumeDTO>error(Collections.singletonList(
+            return Mono.error(new ApiErrorException(ApiResponse.<ResumeDTO>error(Collections.singletonList(
                     new ApiResponse.ErrorDetail("CREATE_ERROR", "Failed to create resume: " + e.getMessage(), null, null)
-            )));
+            ))));
         }
     }
 

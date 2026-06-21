@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
         return Mono.just(ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(Collections.singletonList(
-                        new ApiResponse.ErrorDetail("ACCESS_DENIED", ex.getMessage(), null, null)
+                        new ApiResponse.ErrorDetail("ACCESS_DENIED", "Access Denied : you are not allowed to do current action.", null, null)
                 ))));
     }
 
@@ -114,6 +114,18 @@ public class GlobalExceptionHandler {
         );
 
         return Mono.just(ResponseEntity.status(ex.getStatusCode()).body(response));
+    }
+
+    @ExceptionHandler(ApiErrorException.class)
+    public Mono<ResponseEntity<ApiResponse<?>>> handleApiErrorException(ApiErrorException ex) {
+        log.error("ApiErrorException: {}", ex.getMessage());
+
+        // Use the response embedded in the exception
+        ApiResponse<?> response = ex.getResponse();
+
+        return Mono.just(ResponseEntity
+                .status(HttpStatus.BAD_REQUEST) // or choose status dynamically if needed
+                .body(response));
     }
 
     @ExceptionHandler(Exception.class)

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import reactor.core.publisher.Mono;
 
@@ -24,6 +25,7 @@ public class DataInitializer {
     private final PasswordEncoder passwordEncoder;
 
     @Bean
+    @Order(1)
     public CommandLineRunner initializeData(
             UserRepository userRepository,
             UserSecurityRepository userSecurityRepository,
@@ -59,6 +61,13 @@ public class DataInitializer {
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
+            Role portfolioUserRole  = Role.builder()
+                    .name("ROLE_PORTFOLIO")
+                    .description("User with portfolio role.")
+                    .systemRole(true)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
 
             // Insert roles if they do not exist
             roleRepository.findByName("ROLE_USER")
@@ -71,6 +80,10 @@ public class DataInitializer {
 
             roleRepository.findByName("ROLE_SUPER_ADMIN")
                     .switchIfEmpty(roleRepository.save(superAdminRole))
+                    .subscribe();
+
+            roleRepository.findByName("ROLE_PORTFOLIO")
+                    .switchIfEmpty(roleRepository.save(portfolioUserRole))
                     .subscribe();
 
             // Insert super admin user if not exists

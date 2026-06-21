@@ -6,6 +6,7 @@ import com.snp.dev.user_management_service.service.ResumeService;
 import com.snp.dev.user_management_service.util.CommonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ public class ResumeController {
     // ==================== Protected Endpoints ====================
 
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ResumeDTO>> getResume(
             @PathVariable String userId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -41,6 +43,7 @@ public class ResumeController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ResumeDTO>> createOrUpdateResume(
             @RequestBody ResumeDTO resumeDTO,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -51,6 +54,7 @@ public class ResumeController {
     }
 
     @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ResumeDTO>> updateResume(
             @PathVariable String userId,
             @RequestBody ResumeDTO resumeDTO,
@@ -62,6 +66,7 @@ public class ResumeController {
     }
 
     @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<Void>> deleteResume(
             @PathVariable String userId,
             @AuthenticationPrincipal UserDetails userDetails) {

@@ -8,6 +8,7 @@ import com.snp.dev.user_management_service.service.ContactService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class ContactController {
     // ==================== Protected Endpoints (Admin Only) ====================
 
     @GetMapping
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<List<ContactResponse>>> getAllContacts(
             @AuthenticationPrincipal UserDetails userDetails) {
         log.info("GET /api/contacts - by user: {}", userDetails.getUsername());
@@ -42,6 +44,7 @@ public class ContactController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ContactResponse>> getContactById(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -50,6 +53,7 @@ public class ContactController {
     }
 
     @PutMapping("/{id}/read")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ContactResponse>> markAsRead(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -58,6 +62,7 @@ public class ContactController {
     }
 
     @PutMapping("/{id}/reply")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ContactResponse>> replyToContact(
             @PathVariable String id,
             @Valid @RequestBody ContactReplyRequest replyRequest,
@@ -67,6 +72,7 @@ public class ContactController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<Void>> deleteContact(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -75,6 +81,7 @@ public class ContactController {
     }
 
     @GetMapping("/unread/count")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<Long>> getUnreadCount(
             @AuthenticationPrincipal UserDetails userDetails) {
         log.info("GET /api/contacts/unread/count - by user: {}", userDetails.getUsername());

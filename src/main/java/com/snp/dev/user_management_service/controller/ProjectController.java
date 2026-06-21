@@ -7,6 +7,7 @@ import com.snp.dev.user_management_service.service.ProjectService;
 import com.snp.dev.user_management_service.util.CommonUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -60,6 +61,7 @@ public class ProjectController {
     // ==================== Protected Endpoints ====================
 
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<List<ProjectDTO>>> getProjects(
             @PathVariable String userId) {
         log.info("GET /api/portfolio/projects/{} by user: {}", userId);
@@ -67,12 +69,14 @@ public class ProjectController {
     }
 
     @GetMapping("/{userId}/count")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<Long>> getProjectCount(@PathVariable String userId) {
         log.info("GET /api/portfolio/projects/{}/count", userId);
         return projectService.getProjectCount(userId);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ProjectDTO>> createProject(
             @RequestBody ProjectDTO projectDTO,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -82,6 +86,7 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<ProjectDTO>> updateProject(
             @PathVariable String id,
             @RequestBody ProjectDTO projectDTO,
@@ -92,6 +97,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('PORTFOLIO')")
     public Mono<ApiResponse<Void>> deleteProject(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {

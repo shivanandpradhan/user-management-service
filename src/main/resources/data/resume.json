@@ -1,0 +1,167 @@
+{
+  "personalInfo": {
+    "name": "Shivanand Pradhan",
+    "title": "Full Stack Developer | Backend Specialist",
+    "bio": "Full Stack Developer with 4+ years of experience architecting scalable backend microservices and responsive frontend applications. Proficient in Java, Spring Boot (Reactive), and React.js with a proven track record of optimizing API performance and reducing latency.",
+    "longBio": "I'm a passionate Full Stack Developer who bridges the gap between powerful backend systems and intuitive frontend experiences. With a strong foundation from NIT Srinagar and hands-on experience at Publicis Sapient, I've successfully delivered enterprise-grade solutions for Verizon's customer acquisition flows. While my core expertise lies in Java and Spring Boot microservices, I'm equally comfortable building responsive UIs with React.js. I thrive on solving complex problems, optimizing performance, and collaborating across teams to deliver business-critical solutions.",
+    "photoUrl": "/images/profile1.jpeg",
+    "coverImageUrl": "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
+    "email": "shivanandpradhan0@gmail.com",
+    "phone": "+91 7051101452",
+    "location": "New Delhi, India",
+    "birthday": "30th November, 2000",
+    "languages": ["English (Fluent)", "Hindi (Native)"],
+    "interests": ["Full Stack Development", "DevOps", "Generative AI", "AI & Machine Learning"]
+  },
+  "pdfUrl": "assets/shivanandpradhan-fullstack-developer.pdf",
+  "downloadEnabled": true,
+  "education": [
+    {
+      "id": "1",
+      "degree": "B.Tech in Computer Science and Engineering",
+      "institution": "National Institute of Technology, Srinagar",
+      "year": "2018 - 2022",
+      "gpa": "8.6/10",
+      "description": "Comprehensive curriculum covering Data Structures, Algorithms, Database Management Systems, Operating Systems, and Computer Networks."
+    },
+    {
+      "id": "2",
+      "degree": "Higher Secondary Education (12th) - Non-Medical",
+      "institution": "Shiksha Niketan Senior Secondary School, Jammu",
+      "year": "2017 - 2018",
+      "gpa": "9.5/10",
+      "description": "Specialized in Physics, Chemistry, and Mathematics with distinction."
+    },
+    {
+      "id": "3",
+      "degree": "Secondary Education (10th)",
+      "institution": "Shiksha Niketan Senior Secondary School, Jammu",
+      "year": "2015 - 2016",
+      "gpa": "9.2/10",
+      "description": "Foundation education with focus on Science and Mathematics."
+    }
+  ],
+  "experience": [
+    {
+      "id": "1",
+      "company": "Publicis Sapient",
+      "position": "Associate Software Development Engineer - II",
+      "startDate": "Feb 2024 - Present",
+      "location": "Gurgaon",
+      "type": "Full-time",
+      "responsibilities": [
+        "Led migration from Total Wireless BAU to NSA architecture, implementing session management, distributed caching, and reactive API optimizations to achieve sub-2-second SLA compliance",
+        "Engineered distributed caching layer with Cassandra handling 40% traffic surge, reducing API response time from 3s to 1.5s and significantly improving page load performance",
+        "Developed GraphQL APIs to eliminate over-fetching and optimize data retrieval for downstream services and frontend clients, improving overall system efficiency",
+        "Created Groovy scripts for seamless Cassandra data retrieval and built a common AEM framework, cutting API development time by 60% and streamlining cross-team collaboration"
+      ],
+      "technologies": ["Spring Boot", "Reactive Programming", "Cassandra", "GraphQL", "Groovy", "Adobe Experience Manager", "Kibana", "SonarQube", "JUnit", "Mockito"]
+    },
+    {
+      "id": "2",
+      "company": "Publicis Sapient",
+      "position": "Associate Software Development Engineer - I",
+      "startDate": "Jul 2022 - Jan 2024",
+      "location": "Gurgaon",
+      "type": "Full-time",
+      "responsibilities": [
+        "Optimized reactive APIs across aggregate and domain layers using parallel processing techniques, achieving sub-2-second SLA validated by Gatling load testing",
+        "Delivered a full-stack MVP for the Women in Retail platform with secure authentication, role-based access control, group creation, and image/text posting using React.js and Spring Boot",
+        "Maintained 100% test coverage for new merge requests with zero SonarQube issues, ensuring production-grade code quality and long-term maintainability",
+        "Architected database schemas and supported CI/CD pipeline setup, ensuring data integrity and reliable deployments across platforms"
+      ],
+      "technologies": ["Spring Boot", "Reactive Programming", "React.js", "JUnit", "Mockito", "Gatling", "CI/CD", "Jenkins", "REST APIs"]
+    }
+  ],
+  "skills": {
+    "frontend": [
+      { "name": "React.js", "level": 80, "years": 2 },
+      { "name": "JavaScript", "level": 80, "years": 3 },
+      { "name": "TypeScript", "level": 70, "years": 1.5 },
+      { "name": "HTML5/CSS3", "level": 80, "years": 3 },
+      { "name": "Tailwind CSS", "level": 60, "years": 1 },
+      { "name": "Responsive Design", "level": 70, "years": 2 }
+    ],
+    "backend": [
+      { "name": "Java", "level": 80, "years": 3.5 },
+      { "name": "Spring Boot", "level": 80, "years": 3.5 },
+      { "name": "Microservices Architecture", "level": 70, "years": 3.5 },
+      { "name": "RESTful APIs", "level": 85, "years": 3.5 },
+      { "name": "GraphQL", "level": 65, "years": 2 },
+      { "name": "Reactive Programming", "level": 80, "years": 3 },
+      { "name": "Python", "level": 50, "years": 1 }
+    ],
+    "database": [
+      { "name": "Cassandra", "level": 60, "years": 1 },
+      { "name": "MongoDB", "level": 70, "years": 2 },
+      { "name": "MySQL", "level": 75, "years": 2 },
+      { "name": "Redis", "level": 60, "years": 1 }
+    ],
+    "messaging": [
+      { "name": "Kafka", "level": 60, "years": 1 },
+      { "name": "JWT", "level": 75, "years": 2 }
+    ],
+    "testing": [
+      { "name": "JUnit", "level": 90, "years": 3.5 },
+      { "name": "Mockito", "level": 85, "years": 3 },
+      { "name": "Integration Testing", "level": 80, "years": 3 },
+      { "name": "Gatling", "level": 70, "years": 1.5 }
+    ],
+    "devops": [
+      { "name": "Git", "level": 85, "years": 3.5 },
+      { "name": "SonarQube", "level": 85, "years": 3 },
+      { "name": "Kibana", "level": 80, "years": 3 },
+      { "name": "Jenkins", "level": 50, "years": 1.5 },
+      { "name": "Docker", "level": 75, "years": 1.5 }
+    ],
+    "cloud": [
+      { "name": "AWS Fundamentals", "level": 50, "years": 1 },
+      { "name": "GCP Fundamentals", "level": 50, "years": 1 }
+    ]
+  },
+  "certifications": [
+    {
+      "name": "AWS Cloud Practitioner Essentials",
+      "issuer": "Amazon Web Services",
+      "date": "2022",
+      "credentialId": "8TFXG2JKY2BE1KWX",
+      "description": "Fundamental understanding of AWS Cloud concepts, services, and pricing models"
+    },
+    {
+      "name": "Cloud Digital Leader",
+      "issuer": "Google Cloud",
+      "date": "2023",
+      "description": "Basic understanding of GCP core services, storage options, and resource management"
+    }
+  ],
+  "achievements": [
+    {
+      "title": "Performance Optimization",
+      "description": "Achieved 40% faster response times through strategic Cassandra caching implementation"
+    },
+    {
+      "title": "Code Quality Excellence",
+      "description": "Maintained 95%+ test coverage and resolved 100+ SonarQube issues across multiple sprints"
+    },
+    {
+      "title": "SLA Compliance Achievement",
+      "description": "Ensured consistent (<2 second) API response times validated via Gatling load testing"
+    },
+    {
+      "title": "GraphQL Implementation",
+      "description": "Developed and deployed reactive GraphQL APIs for efficient data retrieval and system interoperability"
+    },
+    {
+      "title": "Full Stack Project Delivery",
+      "description": "Successfully delivered 'Women in Retail' platform with end-to-end features including authentication and role-based access control"
+    },
+    {
+      "title": "Cloud Certification Achievement",
+      "description": "Earned both AWS and GCP foundational certifications demonstrating cloud literacy"
+    },
+    {
+      "title": "AEM Framework Development",
+      "description": "Built a common AEM framework cutting API development time by 60% and streamlining cross-team collaboration"
+    }
+  ]
+}

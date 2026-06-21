@@ -4,6 +4,7 @@ import com.snp.dev.user_management_service.dto.ApiResponse;
 import com.snp.dev.user_management_service.dto.portfolio.ContactReplyRequest;
 import com.snp.dev.user_management_service.dto.portfolio.ContactRequest;
 import com.snp.dev.user_management_service.dto.portfolio.ContactResponse;
+import com.snp.dev.user_management_service.exception.ApiErrorException;
 import com.snp.dev.user_management_service.model.Contact;
 import com.snp.dev.user_management_service.repository.ContactRepository;
 import com.snp.dev.user_management_service.service.ContactService;
@@ -46,9 +47,9 @@ public class ContactServiceImpl implements ContactService {
                 .<ApiResponse<ContactResponse>>map(ApiResponse::success)
                 .onErrorResume(e -> {
                     log.error("Error submitting contact: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("SUBMIT_ERROR", "Failed to submit contact: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -63,9 +64,9 @@ public class ContactServiceImpl implements ContactService {
                 .defaultIfEmpty(ApiResponse.success(Collections.emptyList()))
                 .onErrorResume(e -> {
                     log.error("Error fetching contacts: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<List<ContactResponse>>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<List<ContactResponse>>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch contacts: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -76,14 +77,14 @@ public class ContactServiceImpl implements ContactService {
         return contactRepository.findById(id)
                 .map(this::mapToResponse)
                 .<ApiResponse<ContactResponse>>map(ApiResponse::success)
-                .switchIfEmpty(Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                .switchIfEmpty(Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                         new ApiResponse.ErrorDetail("NOT_FOUND", "Contact not found with id: " + id, null, null)
-                ))))
+                )))))
                 .onErrorResume(e -> {
                     log.error("Error fetching contact: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch contact: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -99,14 +100,14 @@ public class ContactServiceImpl implements ContactService {
                 })
                 .map(this::mapToResponse)
                 .<ApiResponse<ContactResponse>>map(ApiResponse::success)
-                .switchIfEmpty(Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                .switchIfEmpty(Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                         new ApiResponse.ErrorDetail("NOT_FOUND", "Contact not found with id: " + id, null, null)
-                ))))
+                )))))
                 .onErrorResume(e -> {
                     log.error("Error marking contact as read: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("UPDATE_ERROR", "Failed to mark contact as read: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -124,14 +125,14 @@ public class ContactServiceImpl implements ContactService {
                 })
                 .map(this::mapToResponse)
                 .<ApiResponse<ContactResponse>>map(ApiResponse::success)
-                .switchIfEmpty(Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                .switchIfEmpty(Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                         new ApiResponse.ErrorDetail("NOT_FOUND", "Contact not found with id: " + id, null, null)
-                ))))
+                )))))
                 .onErrorResume(e -> {
                     log.error("Error replying to contact: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ContactResponse>error(Collections.singletonList(
+                    return Mono.error(new ApiErrorException(ApiResponse.<ContactResponse>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("REPLY_ERROR", "Failed to reply to contact: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 

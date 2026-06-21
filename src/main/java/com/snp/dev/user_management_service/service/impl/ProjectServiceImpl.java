@@ -2,10 +2,12 @@ package com.snp.dev.user_management_service.service.impl;
 
 import com.snp.dev.user_management_service.dto.ApiResponse;
 import com.snp.dev.user_management_service.dto.portfolio.ProjectDTO;
+import com.snp.dev.user_management_service.exception.ApiErrorException;
 import com.snp.dev.user_management_service.model.Project;
 import com.snp.dev.user_management_service.repository.ProjectRepository;
 import com.snp.dev.user_management_service.service.ProjectService;
 import com.snp.dev.user_management_service.service.UserService;
+import com.snp.dev.user_management_service.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,9 +33,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .flatMap(canEdit -> {
                     Boolean canEditData = canEdit.getData();
                     if (canEditData == null || !canEditData) {
-                        return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                        return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("FORBIDDEN", "You don't have permission to create projects", null, null)
-                        )));
+                        ))));
                     }
 
                     Project project = Project.builder()
@@ -60,16 +62,22 @@ public class ProjectServiceImpl implements ProjectService {
                             .map(saved -> ApiResponse.<ProjectDTO>success(mapToDTO(saved)))
                             .onErrorResume(e -> {
                                 log.error("Error creating project: {}", e.getMessage());
-                                return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                                if(ExceptionUtil.isHandledException(e)){
+                                    return Mono.error(e);
+                                }
+                                return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                                         new ApiResponse.ErrorDetail("CREATE_ERROR", "Failed to create project: " + e.getMessage(), null, null)
-                                )));
+                                ))));
                             });
                 })
                 .onErrorResume(e -> {
                     log.error("Error in createProject: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("CREATE_ERROR", "Failed to create project: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -85,9 +93,9 @@ public class ProjectServiceImpl implements ProjectService {
                                 .flatMap(canEdit -> {
                                     Boolean canEditData = canEdit.getData();
                                     if (canEditData == null || !canEditData) {
-                                        return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                                        return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                                                 new ApiResponse.ErrorDetail("FORBIDDEN", "You don't have permission to edit this project", null, null)
-                                        )));
+                                        ))));
                                     }
                                     return proceedWithUpdate(existingProject, projectDTO);
                                 });
@@ -96,9 +104,12 @@ public class ProjectServiceImpl implements ProjectService {
                 })
                 .onErrorResume(e -> {
                     log.error("Error updating project: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("UPDATE_ERROR", "Failed to update project: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -122,9 +133,12 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(saved -> ApiResponse.<ProjectDTO>success(mapToDTO(saved)))
                 .onErrorResume(e -> {
                     log.error("Error saving updated project: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("SAVE_ERROR", "Failed to save project: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -153,6 +167,9 @@ public class ProjectServiceImpl implements ProjectService {
                 })
                 .onErrorResume(e -> {
                     log.error("Error deleting project: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<Void>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("DELETE_ERROR", "Failed to delete project: " + e.getMessage(), null, null)
                     )));
@@ -171,15 +188,18 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(this::mapToDTO)
                 .<ApiResponse<ProjectDTO>>map(ApiResponse::success)
                 .switchIfEmpty(Mono.defer(() ->
-                        Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                        Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                                 new ApiResponse.ErrorDetail("NOT_FOUND", "Project not found with id: " + id, null, null)
                         )))
-                ))
+                )))
                 .onErrorResume(e -> {
                     log.error("Error fetching project: {}", e.getMessage());
-                    return Mono.just(ApiResponse.<ProjectDTO>error(Collections.singletonList(
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
+                    return Mono.error(new ApiErrorException(ApiResponse.<ProjectDTO>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch project: " + e.getMessage(), null, null)
-                    )));
+                    ))));
                 });
     }
 
@@ -194,6 +214,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .defaultIfEmpty(ApiResponse.success(Collections.emptyList()))
                 .onErrorResume(e -> {
                     log.error("Error fetching projects: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<List<ProjectDTO>>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch projects: " + e.getMessage(), null, null)
                     )));
@@ -213,6 +236,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .defaultIfEmpty(ApiResponse.success(Collections.emptyList()))
                 .onErrorResume(e -> {
                     log.error("Error fetching featured projects: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<List<ProjectDTO>>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch featured projects: " + e.getMessage(), null, null)
                     )));
@@ -230,6 +256,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .defaultIfEmpty(ApiResponse.success(Collections.emptyList()))
                 .onErrorResume(e -> {
                     log.error("Error fetching projects by category: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<List<ProjectDTO>>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch projects by category: " + e.getMessage(), null, null)
                     )));
@@ -247,6 +276,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .defaultIfEmpty(ApiResponse.success(Collections.emptyList()))
                 .onErrorResume(e -> {
                     log.error("Error fetching public projects: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<List<ProjectDTO>>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch public projects: " + e.getMessage(), null, null)
                     )));
@@ -266,6 +298,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .<ApiResponse<Long>>map(ApiResponse::success)
                 .onErrorResume(e -> {
                     log.error("Error counting projects: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<Long>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("COUNT_ERROR", "Failed to count projects: " + e.getMessage(), null, null)
                     )));
@@ -283,6 +318,9 @@ public class ProjectServiceImpl implements ProjectService {
                 .defaultIfEmpty(ApiResponse.success(Collections.emptyList()))
                 .onErrorResume(e -> {
                     log.error("Error fetching all projects: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
                     return Mono.just(ApiResponse.<List<ProjectDTO>>error(Collections.singletonList(
                             new ApiResponse.ErrorDetail("FETCH_ERROR", "Failed to fetch projects: " + e.getMessage(), null, null)
                     )));

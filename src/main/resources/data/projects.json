@@ -1,0 +1,86 @@
+{
+  "projects": [
+    {
+      "title": "Watch Movie Trailer",
+      "description": "A movie discovery web app that lets users explore films across multiple genres (Trending, Top Rated, Action, Comedy, Horror, Animation, Music, Romance, Documentaries, etc.) and watch trailers directly from YouTube.",
+      "longDescription": "Developed a dynamic movie exploration platform where users can browse movies by various categories including Netflix Originals, Trending Now, Top Rated, Action Movies, Science Fiction, Comedy, Animation, Music, Horror, Romance, and Documentaries. Each movie displays detailed information, and users can instantly watch the official trailer fetched from YouTube. Built with React for the frontend, Axios for API integration, and deployed on Firebase Hosting.",
+      "githubUrl": "https://github.com/shivanandpradhan/watch-trailer-vite/tree/master",
+      "deployedUri": "https://watch-trailer-3f16b.firebaseapp.com/",
+      "tools": ["React", "Axios", "Firebase Hosting", "YouTube API", "TMDB API", "CSS3", "React Router"],
+      "category": "Frontend",
+      "featured": true,
+      "coverImageUrl": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+        "https://images.unsplash.com/photo-1536440136628-849c177e76a1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1025&q=80"
+      ],
+      "challenges": "Integrating multiple API sources (TMDB for movie data, YouTube for trailers) and managing asynchronous data fetching across different movie categories.",
+      "solutions": "Implemented efficient API caching strategies and used React hooks (useState, useEffect) with async/await patterns to handle data loading states gracefully.",
+      "date": "2024"
+    },
+    {
+      "title": "User Management System - Full Stack",
+      "description": "Enterprise-grade full-stack user management platform with Multi-Factor Authentication (MFA), role-based access control (RBAC), and complete user lifecycle management.",
+      "longDescription": "A comprehensive user management solution built from scratch with Spring Boot backend and React frontend. Features include user registration, login with JWT authentication, password reset functionality, MFA using Google Authenticator, and granular role-based access control (Admin/User roles). Different functionalities are exposed based on user roles, ensuring secure and role-appropriate access. The system is fully deployed with backend on Render and frontend on GitHub Pages, demonstrating complete CI/CD workflow.",
+      "githubUrl": "https://github.com/shivanandpradhan/user-management-frontend",
+      "deployedUri": "https://shivanandpradhan.github.io/user-management-frontend",
+      "tools": [
+        "Spring Boot",
+        "React",
+        "JWT",
+        "Google Authenticator",
+        "MongoDB",
+        "JPA/Hibernate",
+        "Render",
+        "GitHub Pages",
+        "Axios",
+        "BCrypt",
+        "MFA/TOTP"
+      ],
+      "category": "Full Stack",
+      "featured": true,
+      "coverImageUrl": "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+        "https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80"
+      ],
+      "challenges": "Implementing secure MFA with time-based one-time passwords (TOTP), managing JWT token lifecycle, and ensuring role-based authorization across multiple API endpoints.",
+      "solutions": "Integrated Google Authenticator library for TOTP generation, implemented stateless JWT authentication with refresh tokens, and used Spring Security method-level annotations for fine-grained access control.",
+      "date": "2024"
+    },
+    {
+      "title": "User Management System - Backend API",
+      "description": "Robust Spring Boot REST API with three-tier role-based access control (User, Admin, Super Admin), JWT authentication, MFA via Google Authenticator, and email services for user communication.",
+      "longDescription": "A production-ready backend API built with Spring Boot and Java that powers complete user management functionality. The API implements three distinct roles - NORMAL_USER, ADMIN, and SUPER_ADMIN - each with specific permissions and access levels. Features include user registration with email verification, JWT-based authentication with refresh tokens, MFA setup using Google Authenticator (TOTP), password reset flow with email notifications, and welcome emails for new users. SUPER_ADMIN can manage all users and promote/demote roles, ADMIN can manage users but cannot modify SUPER_ADMIN, and NORMAL_USER has basic profile management access. All API endpoints are secured with Spring Security and role-based method annotations. The API is containerized with Docker and deployed on Render with CI/CD pipeline.",
+      "githubUrl": "https://github.com/shivanandpradhan/user-management-service",
+      "deployedUri": "https://user-management-api.onrender.com/api",
+      "tools": [
+        "Java 17",
+        "Spring Boot 3.x",
+        "Spring Security",
+        "JWT",
+        "Google Authenticator (TOTP)",
+        "JavaMailSender",
+        "MongoDB",
+        "Spring Data MongoDB",
+        "BCrypt",
+        "Maven",
+        "Docker",
+        "Render",
+        "JUnit 5",
+        "Mockito",
+        "Lombok"
+      ],
+      "category": "Backend",
+      "featured": true,
+      "coverImageUrl": "https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+      "images": [
+        "https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
+        "https://images.unsplash.com/photo-1516116216624-53e697fedbea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1028&q=80"
+      ],
+      "challenges": "Implementing three-tier role hierarchy where SUPER_ADMIN > ADMIN > NORMAL_USER, ensuring proper cascade permissions and role upgrade/downgrade security. Integrating both JWT authentication and MFA TOTP without compromising stateless nature.",
+      "solutions": "Designed hierarchical role-based permission system using Spring Security's RoleHierarchy with custom permission evaluators. Implemented two-step verification flow where MFA is optional but enforced for sensitive operations, storing encrypted TOTP secrets in MongoDB.",
+      "date": "2024"
+    }
+  ]
+}
