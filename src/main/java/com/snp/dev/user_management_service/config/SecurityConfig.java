@@ -1,5 +1,6 @@
 package com.snp.dev.user_management_service.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.snp.dev.user_management_service.security.JwtAuthenticationFilter;
 import com.snp.dev.user_management_service.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenProvider tokenProvider;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.cors.allowed.uriList}")
     List<String> corsAllowedList;
@@ -67,7 +69,7 @@ public class SecurityConfig {
                                 .pathMatchers(HttpMethod.POST, "/api/auth/verify-otp").permitAll()
                                 .pathMatchers(HttpMethod.POST, "/api/auth/mfa/verify").permitAll()
                                 .pathMatchers(HttpMethod.GET, "/api/portfolio").permitAll()
-                                .pathMatchers("/api/auth/refresh-token").authenticated()
+                                .pathMatchers("/api/auth/refresh-token").permitAll()
                                 .pathMatchers(
                                         "/swagger-ui.html",
                                         "/swagger-ui/**",
@@ -81,13 +83,13 @@ public class SecurityConfig {
                                 .pathMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
                                 .anyExchange().authenticated()
                 )
-                .addFilterAt(jwtAuthenticationFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAt(jwtAuthenticationFilter(), SecurityWebFiltersOrder.AUTHORIZATION)
                 .build();
     }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(tokenProvider);
+        return new JwtAuthenticationFilter(tokenProvider, objectMapper);
     }
 
     @Bean

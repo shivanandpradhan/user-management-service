@@ -19,8 +19,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    // ==================== Validation Exceptions ====================
+
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleValidationExceptions(WebExchangeBindException ex) {
+        log.error("Validation error: {}", ex.getMessage());
+
         List<ApiResponse.ErrorDetail> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> new ApiResponse.ErrorDetail(
                         "VALIDATION_ERROR",
@@ -35,8 +39,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(errors)));
     }
 
+    // ==================== Resource & Request Exceptions ====================
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.error("Resource not found: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(Collections.singletonList(
@@ -46,6 +54,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadRequestException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleBadRequestException(BadRequestException ex) {
+        log.error("Bad request: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .badRequest()
                 .body(ApiResponse.error(Collections.singletonList(
@@ -53,8 +63,12 @@ public class GlobalExceptionHandler {
                 ))));
     }
 
+    // ==================== Security & Authentication Exceptions ====================
+
     @ExceptionHandler(ForbiddenException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleForbiddenException(ForbiddenException ex) {
+        log.error("Forbidden access: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(Collections.singletonList(
@@ -64,6 +78,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthorizedException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleUnauthorizedException(UnauthorizedException ex) {
+        log.error("Unauthorized: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(Collections.singletonList(
@@ -73,6 +89,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccountLockedException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleAccountLockedException(AccountLockedException ex) {
+        log.error("Account locked: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.LOCKED)
                 .body(ApiResponse.error(Collections.singletonList(
@@ -82,6 +100,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccountDisabledException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleAccountDisabledException(AccountDisabledException ex) {
+        log.error("Account disabled: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(Collections.singletonList(
@@ -91,10 +111,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleAccessDeniedException(AccessDeniedException ex) {
+        log.error("Access denied: {}", ex.getMessage());
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(Collections.singletonList(
-                        new ApiResponse.ErrorDetail("ACCESS_DENIED", "Access Denied : you are not allowed to do current action.", null, null)
+                        new ApiResponse.ErrorDetail("ACCESS_DENIED", "Access Denied: you are not allowed to perform this action.", null, null)
                 ))));
     }
 
@@ -120,20 +142,23 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<ApiResponse<?>>> handleApiErrorException(ApiErrorException ex) {
         log.error("ApiErrorException: {}", ex.getMessage());
 
-        // Use the response embedded in the exception
         ApiResponse<?> response = ex.getResponse();
 
         return Mono.just(ResponseEntity
-                .status(HttpStatus.BAD_REQUEST) // or choose status dynamically if needed
+                .status(HttpStatus.BAD_REQUEST)
                 .body(response));
     }
 
+    // ==================== Generic Exception ====================
+
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ApiResponse<Void>>> handleGenericException(Exception ex) {
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
+
         return Mono.just(ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(Collections.singletonList(
-                        new ApiResponse.ErrorDetail("INTERNAL_ERROR", "An unexpected error occurred", null, null)
+                        new ApiResponse.ErrorDetail("INTERNAL_ERROR", "An unexpected error occurred. Please try again later.", null, null)
                 ))));
     }
 }

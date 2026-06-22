@@ -59,10 +59,15 @@ management:
   health:
     show-details: always
 
-
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
+  access:
+    secret: ${JWT_ACCESS_SECRET}
+    expiration: ${JWT_ACCESS_EXPIRATION}  # 15 minutes
+    algorithm: HS512
+  refresh:
+    secret: ${JWT_REFRESH_SECRET}
+    expiration: ${JWT_REFRESH_EXPIRATION}  # 7 days
+    algorithm: HS384
   issuer: user-management-service
 
 app:

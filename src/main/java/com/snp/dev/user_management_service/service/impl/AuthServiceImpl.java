@@ -20,12 +20,16 @@ import com.snp.dev.user_management_service.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -115,8 +119,8 @@ public class AuthServiceImpl implements AuthService {
                             })
                             .flatMap(savedUser -> {
 
-                                // Create token and response in parallel with email sending
-                                Mono<String> tokenMono = tokenProvider.createToken(savedUser.getUsername(), savedUser.getRoles());
+                                Mono<String> accessTokenMono = tokenProvider.generateAccessToken(savedUser.getUsername(), savedUser.getRoles());
+                                Mono<String> refreshTokenMono = tokenProvider.generateRefreshToken(savedUser.getUsername(), savedUser.getRoles());
 
                                 Mono<Boolean> emailMono = emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername())
                                         .thenReturn(true);
@@ -127,13 +131,13 @@ public class AuthServiceImpl implements AuthService {
                                         "New user registered with username: " + savedUser.getUsername()
                                 ).thenReturn(true) : Mono.just(true);
 
-                                return Mono.zip(tokenMono, emailMono, auditMono)
+                                return Mono.zip(accessTokenMono, emailMono, auditMono, refreshTokenMono)
                                         .flatMap(tuple1 -> {
                                             String token = tuple1.getT1();
                                             return Mono.just(ApiResponse.success(
                                                     AuthResponse.builder()
                                                             .accessToken(token)
-                                                            .refreshToken(UUID.randomUUID().toString())
+                                                            .refreshToken(tuple1.getT4())
                                                             .mfaEnabled(false)
                                                             .otpLoginEnabled(false)
                                                             .userId(savedUser.getId())
@@ -230,11 +234,13 @@ public class AuthServiceImpl implements AuthService {
                     });
         } else {
             // For non-MFA and otp enabled users, generate tokens immediately
-            return tokenProvider.createToken(user.getUsername(), user.getRoles())
-                    .map(accessToken -> ApiResponse.success(
+            Mono<String> accessToken = tokenProvider.generateAccessToken(user.getUsername(), user.getRoles());
+            Mono<String> refreshToken = tokenProvider.generateRefreshToken(user.getUsername(), user.getRoles());
+            return Mono.zip(accessToken, refreshToken)
+                    .map(tuple -> ApiResponse.success(
                             AuthResponse.builder()
-                                    .accessToken(accessToken)
-                                    .refreshToken(UUID.randomUUID().toString()) // In real app, generate proper refresh token
+                                    .accessToken(tuple.getT1())
+                                    .refreshToken(tuple.getT2())
                                     .mfaEnabled(userSecurity.isMfaEnabled())
                                     .otpLoginEnabled(userSecurity.isMfaEnabled())
                                     .userId(user.getId())
@@ -290,16 +296,18 @@ public class AuthServiceImpl implements AuthService {
                                         if (!userSecurity.isOtpLoginEnabled() && userSecurity.isMfaEnabled()) {
                                             return Mono.error(new BadRequestException("MFA is already enabled"));
                                         }
-                                        return tokenProvider.createToken(user.getUsername(), user.getRoles())
-                                                        .map(accessToken -> ApiResponse.success(
-                                                                AuthResponse.builder()
-                                                                        .accessToken(accessToken)
-                                                                        .refreshToken(UUID.randomUUID().toString()) // In real app, generate proper refresh token
-                                                                        .mfaEnabled(false)
-                                                                        .userId(user.getId())
-                                                                        .username(user.getUsername())
-                                                                        .email(user.getEmail())
-                                                                        .build()
+                                        Mono<String> accessToken = tokenProvider.generateAccessToken(user.getUsername(), user.getRoles());
+                                        Mono<String> refreshToken = tokenProvider.generateRefreshToken(user.getUsername(), user.getRoles());
+                                        return Mono.zip(accessToken, refreshToken)
+                                                .map(tuple -> ApiResponse.success(
+                                                        AuthResponse.builder()
+                                                                .accessToken(tuple.getT1())
+                                                                .refreshToken(tuple.getT2())
+                                                                .mfaEnabled(false)
+                                                                .userId(user.getId())
+                                                                .username(user.getUsername())
+                                                                .email(user.getEmail())
+                                                                .build()
                                                         ));
                                     });
                         })
@@ -452,9 +460,45 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
-    @Override
-    public Mono<ApiResponse<TokenRefreshResponse>> refreshToken(TokenRefreshRequest tokenRefreshRequest) {
-        return Mono.error(new UnsupportedOperationException("Token refresh not implemented"));
+    public Mono<ApiResponse<TokenRefreshResponse>> refreshToken(
+            TokenRefreshRequest request) {
+
+        String refreshToken = request.getRefreshToken();
+
+        return tokenProvider.validateRefreshToken(refreshToken)
+                .flatMap(valid -> {
+                    if (!valid) {
+                        return Mono.error(new BadCredentialsException("Invalid refresh token"));
+                    }
+
+                    // ✅ Extract username from refresh token
+                    return tokenProvider.getUsernameFromToken(refreshToken)
+                            .flatMap(username -> userRepository.findByUsername(username))
+                            .switchIfEmpty(Mono.error(new BadCredentialsException("User not found")))
+                            .flatMap(user -> {
+                                // ✅ Generate new access token ONLY
+                                return tokenProvider.generateAccessToken(user.getUsername(), user.getRoles())
+                                        .map(newAccessToken -> {
+                                            // ✅ Return new access token + same refresh token
+                                            TokenRefreshResponse response = TokenRefreshResponse.builder()
+                                                    .accessToken(newAccessToken)
+                                                    .refreshToken(refreshToken)
+                                                    .build();
+
+                                            log.info("Token refreshed for user: {}", user.getUsername());
+                                            return ApiResponse.success(response);
+                                        });
+                            });
+                })
+                .onErrorResume(e -> {
+                    log.error("Refresh error: {}", e.getMessage());
+                    if(ExceptionUtil.isHandledException(e)){
+                        return Mono.error(e);
+                    }
+                    return Mono.just(ApiResponse.error(Collections.singletonList(
+                            new ApiResponse.ErrorDetail("REFRESH_ERROR", e.getMessage(), null, null)
+                    )));
+                });
     }
 
     @Override
@@ -515,11 +559,13 @@ public class AuthServiceImpl implements AuthService {
                                                 user.getId(),
                                                 "MFA_VERIFIED",
                                                 "User verified MFA setup"
-                                        ).then(tokenProvider.createToken(user.getUsername(), user.getRoles())
-                                                .map(accessToken -> ApiResponse.success(
+                                        ).then(
+                                                Mono.zip(tokenProvider.generateAccessToken(user.getUsername(), user.getRoles()),
+                                                tokenProvider.generateRefreshToken(user.getUsername(), user.getRoles()))
+                                                .map(tokens -> ApiResponse.success(
                                                         AuthResponse.builder()
-                                                                .accessToken(accessToken)
-                                                                .refreshToken(UUID.randomUUID().toString())
+                                                                .accessToken(tokens.getT1())
+                                                                .refreshToken(tokens.getT2())
                                                                 .userId(user.getId())
                                                                 .username(user.getUsername())
                                                                 .email(user.getEmail())
